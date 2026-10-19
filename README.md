@@ -15,6 +15,7 @@
 - [Architecture & Tech Stack](#-architecture--tech-stack)
 - [Quickstart & Installation](#-quickstart--installation)
 - [Running Tests & Linting](#-running-tests--linting)
+- [Verification Screenshots Gallery](#-verification-screenshots-gallery)
 - [Ethical Note & Limitations](#-ethical-note--limitations)
 
 ---
@@ -141,14 +142,15 @@ Estimators **never observe $U$**, reflecting the real-world challenge where unme
 - **Core Mathematics:** NumPy (vectorized Newton-Raphson logistic propensity solver, $<0.2\,\text{ms}$ per fit), SciPy, Scikit-learn
 - **Data & Tables:** Pandas
 - **Visualization:** Plotly (interactive SVG/WebGL with custom templates), Kaleido (PNG export)
-- **Web Interface:** Streamlit (with caching via `st.cache_data` and session state)
-- **Frontend App:** Standalone React 19 + Vite 8 + Tailwind CSS v4 in `D:\projects\OPE LAB frontend`
+- **Web Interface (Python):** Streamlit (with caching via `st.cache_data` and session state)
+- **Web Interface (React):** Standalone React 19 + Vite 8 + Tailwind CSS v4 in `frontend/` with FlutedGlass aesthetics
 - **Code Quality:** Ruff (zero lint errors), Pytest (100% test pass rate)
 
 ---
 
 ## ⚡ Quickstart & Installation
 
+### Option 1: Streamlit Backend App
 ```bash
 # Clone the repository
 git clone https://github.com/mailtojaswanthss-svg/ope-lab.git
@@ -166,10 +168,25 @@ source .venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Launch OPE Lab (Streamlit Backend App)
+# Launch OPE Lab (Streamlit App)
 streamlit run app.py
 ```
 Open your browser at `http://localhost:8501`.
+
+### Option 2: React 19 + Vite Frontend
+```bash
+# Navigate to the frontend directory
+cd frontend
+
+# Install Node dependencies
+npm install
+
+# Start development server
+npm run dev
+# OR build and run preview
+npm run build && npm run preview
+```
+Open your browser at `http://localhost:5173` (or `http://localhost:4173`).
 
 ---
 
@@ -211,6 +228,21 @@ ruff check .
 # Generate verified empirical numbers for hackathon abstract
 python scripts/make_abstract_facts.py
 ```
+
+---
+
+## 📸 Verification Screenshots Gallery
+
+The React application and Streamlit views have been rigorously verified. Below are snapshots of the key views:
+
+| View | Description | File |
+| :--- | :--- | :--- |
+| **Home View** | FlutedGlass animated rainbow banner, hero section, and core stats | [`screenshots/frontend_home.png`](screenshots/frontend_home.png) |
+| **Causal Story** | Interactive DAG walkthrough and selection bias intuition | [`screenshots/frontend_story.png`](screenshots/frontend_story.png) |
+| **Estimators Breakdown** | Mathematical formulation and bias/variance trade-offs | [`screenshots/frontend_estimators.png`](screenshots/frontend_estimators.png) |
+| **Interactive Lab** | Live Monte Carlo evaluation sliders against ground truth $V^*$ | [`screenshots/frontend_lab.png`](screenshots/frontend_lab.png) |
+| **Failure Studies** | Confounding degradation curve & 3x3 Decision Map grid | [`screenshots/frontend_studies.png`](screenshots/frontend_studies.png) |
+| **Real Data Benchmark** | Open Bandit ZOZOTOWN benchmark metrics and sensitivity bounds | [`screenshots/frontend_real_data.png`](screenshots/frontend_real_data.png) |
 
 ---
 
