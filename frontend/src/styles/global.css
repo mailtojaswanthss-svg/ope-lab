@@ -1,0 +1,194 @@
+/*
+ * OPE Lab design tokens (--ds-*). Font faces are loaded in src/index.css.
+ *
+ * Every color, space, border, radius, shadow, font face and motion value used
+ * by the UI comes from the --ds-* variables below. Edit a value here and the
+ * whole app follows. (src/styles/tailwind.css only maps these to utilities.)
+ */
+
+:root {
+  /* ---------- Typography: font faces ---------- */
+  --ds-font-body: 'DM Sans', system-ui, sans-serif;
+  --ds-font-display: 'Fraunces', Georgia, serif;
+  --ds-font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* ---------- Typography: scale (size / line-height / tracking) ---------- */
+  --ds-text-display: clamp(2.5rem, 1.4rem + 4.4vw, 5rem);
+  --ds-text-display-lh: 1.04;
+  --ds-text-display-tracking: -0.02em;
+  --ds-text-h1: clamp(2rem, 1.4rem + 2.2vw, 3rem);
+  --ds-text-h1-lh: 1.1;
+  --ds-text-h1-tracking: -0.015em;
+  --ds-text-h2: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+  --ds-text-h2-lh: 1.2;
+  --ds-text-h3: 1.25rem;
+  --ds-text-h3-lh: 1.3;
+  --ds-text-stat: clamp(2rem, 1.4rem + 2vw, 3.25rem);
+  --ds-text-stat-lh: 1;
+  --ds-text-lead: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
+  --ds-text-lead-lh: 1.55;
+  --ds-text-body: 1rem;
+  --ds-text-body-lh: 1.6;
+  --ds-text-small: 0.875rem;
+  --ds-text-small-lh: 1.5;
+  --ds-text-caption: 0.75rem;
+  --ds-text-caption-lh: 1.4;
+
+  --ds-weight-regular: 400;
+  --ds-weight-medium: 500;
+  --ds-weight-semibold: 600;
+  --ds-weight-bold: 700;
+
+  /* ---------- Spacing ---------- */
+  --ds-space-unit: 0.25rem; /* base for numeric utilities (size-10, h-1, …) */
+  --ds-space-2xs: 0.125rem;
+  --ds-space-xs: 0.25rem;
+  --ds-space-sm: 0.5rem;
+  --ds-space-md: 0.75rem;
+  --ds-space-lg: 1rem;
+  --ds-space-xl: 1.5rem;
+  --ds-space-2xl: 2rem;
+  --ds-space-3xl: 3rem;
+  --ds-space-4xl: 4rem;
+  --ds-space-section: clamp(2.5rem, 1.5rem + 4vw, 4.5rem);
+
+  /* ---------- Layout ---------- */
+  --ds-size-content: 76rem;
+  --ds-size-prose: 42rem;
+
+  /* ---------- Borders & radius ---------- */
+  --ds-border-thin: 1px;
+  --ds-border-thick: 2px;
+  --ds-radius-sm: 0.375rem;
+  --ds-radius-md: 0.625rem;
+  --ds-radius-lg: 1rem;
+  --ds-radius-xl: 1.5rem;
+  --ds-radius-2xl: 2rem;
+  --ds-radius-full: 9999px;
+
+  /* ---------- Motion ---------- */
+  --ds-duration-fast: 150ms;
+  --ds-duration-base: 250ms;
+  --ds-duration-slow: 600ms;
+  --ds-ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ds-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ---------- Color: surfaces & text ---------- */
+  --ds-color-canvas: #f6f5fb;
+  --ds-color-surface: #ffffff;
+  --ds-color-surface-muted: #f1effa;
+  --ds-color-surface-sunken: #ebe9f5;
+  --ds-color-fg: #15122b;
+  --ds-color-fg-muted: #565270;
+  --ds-color-fg-subtle: #8a87a3;
+  --ds-color-line: #e4e1f0;
+  --ds-color-line-strong: #cfcbe3;
+
+  /* ---------- Color: brand ---------- */
+  --ds-color-primary: #6a4cff;
+  --ds-color-primary-hover: #5838f0;
+  --ds-color-primary-soft: #ece8ff;
+  --ds-color-primary-ink: #4a2fd6;
+  --ds-color-on-primary: #ffffff;
+
+  /* ---------- Color: accents (base / soft background / ink text) ---------- */
+  --ds-color-teal: #14b8a6;
+  --ds-color-teal-soft: #dcf7f3;
+  --ds-color-teal-ink: #0f766e;
+  --ds-color-orange: #f97316;
+  --ds-color-orange-soft: #ffedde;
+  --ds-color-orange-ink: #c2410c;
+  --ds-color-pink: #ec4899;
+  --ds-color-pink-soft: #fde4f1;
+  --ds-color-pink-ink: #be185d;
+  --ds-color-blue: #3b82f6;
+  --ds-color-blue-soft: #e0ecff;
+  --ds-color-blue-ink: #1d4ed8;
+  --ds-color-yellow: #eab308;
+  --ds-color-yellow-soft: #fdf5d3;
+  --ds-color-yellow-ink: #a16207;
+  --ds-color-green: #22c55e;
+  --ds-color-green-soft: #dcfce7;
+  --ds-color-green-ink: #15803d;
+
+  /* ---------- Color: status ---------- */
+  --ds-color-success: #22c55e;
+  --ds-color-success-soft: #dcfce7;
+  --ds-color-success-ink: #15803d;
+  --ds-color-warning: #f59e0b;
+  --ds-color-warning-soft: #fef3c7;
+  --ds-color-warning-ink: #b45309;
+  --ds-color-danger: #ef4444;
+  --ds-color-danger-soft: #fee2e2;
+  --ds-color-danger-ink: #b91c1c;
+
+  /* ---------- Color: "Two Worlds" stage (constant across modes) ---------- */
+  --ds-color-stage: #101a3e;
+  --ds-color-stage-deep: #1c1147;
+  --ds-color-stage-fg: #f5f4ff;
+  --ds-color-stage-fg-muted: rgb(245 244 255 / 0.72);
+  --ds-color-stage-ghost: rgb(245 244 255 / 0.42);
+  --ds-color-stage-line: rgb(245 244 255 / 0.12);
+  --ds-color-stage-surface: rgb(255 255 255 / 0.07);
+  --ds-color-stage-accent: #2dd4bf;
+  --ds-color-insight: #fb923c;
+  --ds-color-insight-ink: #c2410c;
+
+  /* ---------- Color: estimators (always paired with a marker shape) ---------- */
+  --ds-color-est-naive: #ef4444;
+  --ds-color-est-replay: #f59e0b;
+  --ds-color-est-dm: #3b82f6;
+  --ds-color-est-ipw: #a855f7;
+  --ds-color-est-snipw: #14b8a6;
+  --ds-color-est-dr: #22c55e;
+
+  /* ---------- Elevation ---------- */
+  --ds-shadow-sm: 0 1px 2px rgb(21 18 43 / 0.05), 0 1px 3px rgb(21 18 43 / 0.06);
+  --ds-shadow-md: 0 10px 28px -10px rgb(21 18 43 / 0.18);
+  --ds-shadow-lg: 0 28px 56px -20px rgb(21 18 43 / 0.3);
+  --ds-shadow-glow: 0 10px 30px -8px rgb(106 76 255 / 0.45);
+}
+
+.dark {
+  --ds-color-canvas: #0e0c1a;
+  --ds-color-surface: #17142a;
+  --ds-color-surface-muted: #1f1b36;
+  --ds-color-surface-sunken: #120f22;
+  --ds-color-fg: #f3f1ff;
+  --ds-color-fg-muted: #b4b0cf;
+  --ds-color-fg-subtle: #7d7999;
+  --ds-color-line: #2a2645;
+  --ds-color-line-strong: #3a3560;
+
+  --ds-color-primary: #8b73ff;
+  --ds-color-primary-hover: #9d88ff;
+  --ds-color-primary-soft: #2a2257;
+  --ds-color-primary-ink: #c3b6ff;
+
+  --ds-color-teal-soft: #0f2f2d;
+  --ds-color-teal-ink: #5eead4;
+  --ds-color-orange-soft: #3a1f0e;
+  --ds-color-orange-ink: #fdba74;
+  --ds-color-pink-soft: #3a1027;
+  --ds-color-pink-ink: #f9a8d4;
+  --ds-color-blue-soft: #12234a;
+  --ds-color-blue-ink: #93c5fd;
+  --ds-color-yellow-soft: #33290a;
+  --ds-color-yellow-ink: #fde047;
+  --ds-color-green-soft: #0f2d1a;
+  --ds-color-green-ink: #86efac;
+
+  --ds-color-success-soft: #0f2d1a;
+  --ds-color-success-ink: #86efac;
+  --ds-color-warning-soft: #33240a;
+  --ds-color-warning-ink: #fcd34d;
+  --ds-color-danger-soft: #3a1414;
+  --ds-color-danger-ink: #fca5a5;
+
+  --ds-color-insight-ink: #fdba74;
+
+  --ds-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --ds-shadow-md: 0 10px 28px -10px rgb(0 0 0 / 0.6);
+  --ds-shadow-lg: 0 28px 56px -20px rgb(0 0 0 / 0.7);
+  --ds-shadow-glow: 0 10px 30px -8px rgb(139 115 255 / 0.5);
+}

@@ -1,0 +1,298 @@
+/*
+ * Maps the --ds-* tokens from global.css to Tailwind utilities.
+ * Tailwind's default palette, fonts, type scale, radii and shadows are cleared
+ * so every class resolves to a design-system variable.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-*: initial;
+  --font-*: initial;
+  --text-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+}
+
+@theme inline {
+  --default-font-family: var(--ds-font-body);
+  --default-mono-font-family: var(--ds-font-mono);
+  --font-body: var(--ds-font-body);
+  --font-display: var(--ds-font-display);
+  --font-mono: var(--ds-font-mono);
+
+  --font-weight-normal: var(--ds-weight-regular);
+  --font-weight-medium: var(--ds-weight-medium);
+  --font-weight-semibold: var(--ds-weight-semibold);
+  --font-weight-bold: var(--ds-weight-bold);
+
+  --text-display: var(--ds-text-display);
+  --text-display--line-height: var(--ds-text-display-lh);
+  --text-display--letter-spacing: var(--ds-text-display-tracking);
+  --text-h1: var(--ds-text-h1);
+  --text-h1--line-height: var(--ds-text-h1-lh);
+  --text-h1--letter-spacing: var(--ds-text-h1-tracking);
+  --text-h2: var(--ds-text-h2);
+  --text-h2--line-height: var(--ds-text-h2-lh);
+  --text-h3: var(--ds-text-h3);
+  --text-h3--line-height: var(--ds-text-h3-lh);
+  --text-stat: var(--ds-text-stat);
+  --text-stat--line-height: var(--ds-text-stat-lh);
+  --text-lead: var(--ds-text-lead);
+  --text-lead--line-height: var(--ds-text-lead-lh);
+  --text-body: var(--ds-text-body);
+  --text-body--line-height: var(--ds-text-body-lh);
+  --text-small: var(--ds-text-small);
+  --text-small--line-height: var(--ds-text-small-lh);
+  --text-caption: var(--ds-text-caption);
+  --text-caption--line-height: var(--ds-text-caption-lh);
+
+  --spacing: var(--ds-space-unit);
+  --spacing-2xs: var(--ds-space-2xs);
+  --spacing-xs: var(--ds-space-xs);
+  --spacing-sm: var(--ds-space-sm);
+  --spacing-md: var(--ds-space-md);
+  --spacing-lg: var(--ds-space-lg);
+  --spacing-xl: var(--ds-space-xl);
+  --spacing-2xl: var(--ds-space-2xl);
+  --spacing-3xl: var(--ds-space-3xl);
+  --spacing-4xl: var(--ds-space-4xl);
+  --spacing-section: var(--ds-space-section);
+  --container-content: var(--ds-size-content);
+  --container-prose: var(--ds-size-prose);
+
+  --radius-sm: var(--ds-radius-sm);
+  --radius-md: var(--ds-radius-md);
+  --radius-lg: var(--ds-radius-lg);
+  --radius-xl: var(--ds-radius-xl);
+  --radius-2xl: var(--ds-radius-2xl);
+  --radius-full: var(--ds-radius-full);
+
+  --shadow-sm: var(--ds-shadow-sm);
+  --shadow-md: var(--ds-shadow-md);
+  --shadow-lg: var(--ds-shadow-lg);
+  --shadow-glow: var(--ds-shadow-glow);
+
+  --color-canvas: var(--ds-color-canvas);
+  --color-surface: var(--ds-color-surface);
+  --color-surface-muted: var(--ds-color-surface-muted);
+  --color-surface-sunken: var(--ds-color-surface-sunken);
+  --color-fg: var(--ds-color-fg);
+  --color-fg-muted: var(--ds-color-fg-muted);
+  --color-fg-subtle: var(--ds-color-fg-subtle);
+  --color-line: var(--ds-color-line);
+  --color-line-strong: var(--ds-color-line-strong);
+
+  --color-primary: var(--ds-color-primary);
+  --color-primary-hover: var(--ds-color-primary-hover);
+  --color-primary-soft: var(--ds-color-primary-soft);
+  --color-primary-ink: var(--ds-color-primary-ink);
+  --color-on-primary: var(--ds-color-on-primary);
+
+  --color-teal: var(--ds-color-teal);
+  --color-teal-soft: var(--ds-color-teal-soft);
+  --color-teal-ink: var(--ds-color-teal-ink);
+  --color-orange: var(--ds-color-orange);
+  --color-orange-soft: var(--ds-color-orange-soft);
+  --color-orange-ink: var(--ds-color-orange-ink);
+  --color-pink: var(--ds-color-pink);
+  --color-pink-soft: var(--ds-color-pink-soft);
+  --color-pink-ink: var(--ds-color-pink-ink);
+  --color-blue: var(--ds-color-blue);
+  --color-blue-soft: var(--ds-color-blue-soft);
+  --color-blue-ink: var(--ds-color-blue-ink);
+  --color-yellow: var(--ds-color-yellow);
+  --color-yellow-soft: var(--ds-color-yellow-soft);
+  --color-yellow-ink: var(--ds-color-yellow-ink);
+  --color-green: var(--ds-color-green);
+  --color-green-soft: var(--ds-color-green-soft);
+  --color-green-ink: var(--ds-color-green-ink);
+
+  --color-success: var(--ds-color-success);
+  --color-success-soft: var(--ds-color-success-soft);
+  --color-success-ink: var(--ds-color-success-ink);
+  --color-warning: var(--ds-color-warning);
+  --color-warning-soft: var(--ds-color-warning-soft);
+  --color-warning-ink: var(--ds-color-warning-ink);
+  --color-danger: var(--ds-color-danger);
+  --color-danger-soft: var(--ds-color-danger-soft);
+  --color-danger-ink: var(--ds-color-danger-ink);
+
+  --color-stage: var(--ds-color-stage);
+  --color-stage-deep: var(--ds-color-stage-deep);
+  --color-stage-fg: var(--ds-color-stage-fg);
+  --color-stage-fg-muted: var(--ds-color-stage-fg-muted);
+  --color-stage-ghost: var(--ds-color-stage-ghost);
+  --color-stage-line: var(--ds-color-stage-line);
+  --color-stage-surface: var(--ds-color-stage-surface);
+  --color-stage-accent: var(--ds-color-stage-accent);
+  --color-insight: var(--ds-color-insight);
+  --color-insight-ink: var(--ds-color-insight-ink);
+
+  --color-est-naive: var(--ds-color-est-naive);
+  --color-est-replay: var(--ds-color-est-replay);
+  --color-est-dm: var(--ds-color-est-dm);
+  --color-est-ipw: var(--ds-color-est-ipw);
+  --color-est-snipw: var(--ds-color-est-snipw);
+  --color-est-dr: var(--ds-color-est-dr);
+
+  --animate-page-in: ds-page-in var(--ds-duration-slow) var(--ds-ease-out) both;
+  --animate-rise: ds-rise var(--ds-duration-slow) var(--ds-ease-out) both;
+  --animate-float: ds-float 12s ease-in-out infinite;
+  --animate-float-slow: ds-float 18s ease-in-out infinite reverse;
+  --animate-pop: ds-pop var(--ds-duration-slow) var(--ds-ease-spring) both;
+  --animate-pulse: ds-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes ds-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--ds-space-lg)));
+  }
+}
+@keyframes ds-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--ds-space-xl));
+  }
+}
+@keyframes ds-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+@keyframes ds-float {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(var(--ds-space-2xl), calc(var(--ds-space-xl) * -1)) scale(1.08);
+  }
+}
+@keyframes ds-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+@keyframes ds-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes ds-fade {
+  to {
+    opacity: 1;
+  }
+}
+@keyframes ds-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* Shared transition + border utilities driven by tokens. */
+@utility transition-ds {
+  transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+  transition-duration: var(--ds-duration-base);
+  transition-timing-function: var(--ds-ease-out);
+}
+@utility border-thin {
+  border-style: solid;
+  border-width: var(--ds-border-thin);
+}
+@utility border-thick {
+  border-style: solid;
+  border-width: var(--ds-border-thick);
+}
+@utility border-t-thin {
+  border-top-style: solid;
+  border-top-width: var(--ds-border-thin);
+}
+@utility border-b-thin {
+  border-bottom-style: solid;
+  border-bottom-width: var(--ds-border-thin);
+}
+@utility border-l-thick {
+  border-left-style: solid;
+  border-left-width: var(--ds-border-thick);
+}
+@utility outline-ds {
+  outline-style: solid;
+  outline-width: var(--ds-border-thick);
+  outline-offset: var(--ds-border-thick);
+}
+
+@layer base {
+  html {
+    background-color: var(--ds-color-canvas);
+    color: var(--ds-color-fg);
+    -webkit-font-smoothing: antialiased;
+  }
+  *,
+  ::before,
+  ::after {
+    border-color: var(--ds-color-line);
+  }
+  ::selection {
+    background-color: var(--ds-color-primary-soft);
+    color: var(--ds-color-fg);
+  }
+  :focus-visible {
+    outline: var(--ds-border-thick) solid var(--ds-color-primary);
+    outline-offset: var(--ds-border-thick);
+  }
+}
+
+@layer components {
+  /* Staggered entrance: children set --i (their index). */
+  .ds-stagger > * {
+    animation: ds-rise var(--ds-duration-slow) var(--ds-ease-out) both;
+    animation-delay: calc(var(--i, 0) * 70ms);
+  }
+
+  /* Animated disclosure: grid rows 0fr → 1fr. */
+  .ds-collapse {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows var(--ds-duration-slow) var(--ds-ease-out);
+  }
+  .ds-collapse[data-open='true'] {
+    grid-template-rows: 1fr;
+  }
+  .ds-collapse > * {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* SVG paths drawn with pathLength="1". */
+  .ds-draw {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: ds-draw 1.8s cubic-bezier(0.45, 0, 0.2, 1) 0.2s forwards;
+  }
+  .ds-draw-late {
+    animation-delay: 1.1s;
+  }
+  .ds-fade-late {
+    opacity: 0;
+    animation: ds-fade 0.8s ease-out 2.2s forwards;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+  .ds-draw {
+    stroke-dashoffset: 0;
+  }
+  .ds-fade-late {
+    opacity: 1;
+  }
+}

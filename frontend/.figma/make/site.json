@@ -1,0 +1,10 @@
+{
+  "description": "Explore the impact of policy decisions through a dual-world interface, comparing real outcomes with counterfactual scenarios to enhance decision-making.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
