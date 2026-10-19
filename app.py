@@ -19,12 +19,28 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
+from ope.analysis import (
+    DecisionMapResult,
+    SweepResult,
+    compute_confounding_sweep,
+    compute_decision_map,
+    compute_overlap_sweep,
+)
 from ope.bootstrap import BootstrapSummary, run_bootstrap_ci
 from ope.estimators import EstimatorSummary, compute_all_estimators
 from ope.simulator import TRUE_INTERVENTIONAL_VALUE, Dataset, simulate_dgp
-from ui.charts import create_estimator_ci_chart, create_weight_distribution_chart
+from ui.charts import (
+    create_confounding_sweep_chart,
+    create_decision_map_grid_chart,
+    create_estimator_ci_chart,
+    create_overlap_sweep_chart,
+    create_weight_distribution_chart,
+)
 from ui.components import (
     render_dark_green_results_card,
+    render_decision_map_summary,
+    render_failure_takeaway_a,
+    render_failure_takeaway_b,
     render_footer,
     render_header,
     render_insight_banner,
@@ -66,6 +82,62 @@ def run_cached_experiment(
         seed=seed,
     )
     return dataset, est_summary, boot_summary
+
+
+@st.cache_data(show_spinner=False)
+def run_cached_confounding_sweep(
+    n_seeds: int,
+    n_samples: int,
+    overlap: float,
+    noise: float,
+    base_seed: int,
+) -> SweepResult:
+    """Caches Monte Carlo sweep across confounding levels [0.0, 1.0]."""
+    return compute_confounding_sweep(
+        confounding_levels=[round(c, 2) for c in np.linspace(0.0, 1.0, 11)],
+        n_seeds=n_seeds,
+        n=n_samples,
+        overlap=overlap,
+        noise=noise,
+        base_seed=base_seed,
+    )
+
+
+@st.cache_data(show_spinner=False)
+def run_cached_overlap_sweep(
+    n_seeds: int,
+    n_samples: int,
+    confounding: float,
+    noise: float,
+    base_seed: int,
+) -> SweepResult:
+    """Caches Monte Carlo sweep across overlap levels [0.1, 1.0]."""
+    return compute_overlap_sweep(
+        overlap_levels=[round(alpha, 2) for alpha in np.linspace(0.1, 1.0, 10)],
+        n_seeds=n_seeds,
+        n=n_samples,
+        confounding=confounding,
+        noise=noise,
+        base_seed=base_seed,
+    )
+
+
+@st.cache_data(show_spinner=False)
+def run_cached_decision_map(
+    n_seeds: int,
+    n_samples: int,
+    noise: float,
+    base_seed: int,
+) -> DecisionMapResult:
+    """Caches 3x3 Decision Map grid evaluation."""
+    return compute_decision_map(
+        confounding_levels=[0.0, 0.5, 1.0],
+        overlap_levels=[0.2, 0.5, 0.9],
+        n_seeds=n_seeds,
+        n=n_samples,
+        noise=noise,
+        base_seed=base_seed,
+    )
 
 
 def initialize_session_state() -> None:
@@ -174,13 +246,31 @@ def main() -> None:
         if q_preset in preset_map and st.session_state.preset_name != preset_map[q_preset]:
             apply_preset(preset_map[q_preset])
 
-    q_tab = st.query_params.get("tab", "overview")
+    q_tab = st.query_params.get("tab", "overview").lower()
     if q_tab == "results":
         tab_results, tab_overview, tab_failure, tab_decision, tab_sensitivity, tab_realdata = st.tabs([
             "📊 Results",
             "📖 Overview",
             "💥 Failure Study",
             "🗺️ Decision Map",
+            "🛡️ Sensitivity",
+            "📁 Real Data",
+        ])
+    elif q_tab == "failure":
+        tab_failure, tab_overview, tab_results, tab_decision, tab_sensitivity, tab_realdata = st.tabs([
+            "💥 Failure Study",
+            "📖 Overview",
+            "📊 Results",
+            "🗺️ Decision Map",
+            "🛡️ Sensitivity",
+            "📁 Real Data",
+        ])
+    elif q_tab == "decision":
+        tab_decision, tab_overview, tab_results, tab_failure, tab_sensitivity, tab_realdata = st.tabs([
+            "🗺️ Decision Map",
+            "📖 Overview",
+            "📊 Results",
+            "💥 Failure Study",
             "🛡️ Sensitivity",
             "📁 Real Data",
         ])
@@ -445,21 +535,146 @@ def main() -> None:
                     """
                 )
 
-    # Clean placeholders for upcoming steps
     with tab_failure:
-        st.markdown("### 💥 Failure Mode Deep Dive")
-        st.info(
-            "🔬 **Under Construction (Step 5)**: This tab will present targeted stress-tests comparing "
-            "extreme weight variance (overlap breakdown) against omitted-variable bias (unobserved confounding)."
+        st.markdown("### 💥 Failure Mode Deep Dive: Confounding vs. Overlap Breakdown")
+        st.caption(
+            "Off-policy evaluation relies on two core causal pillars: **Unconfoundedness** (no hidden factors) "
+            "and **Positivity / Common Support** (logging policy explores all actions). Below, we systematically "
+            "break each assumption in isolation across multiple Monte Carlo seeds."
         )
 
-    with tab_decision:
-        st.markdown("### 🗺️ Estimator Decision Map")
-        st.info(
-            "🗺️ **Under Construction (Step 5)**: This tab will feature a 2D empirical phase diagram "
-            "spanning confounding strength (x-axis) vs. overlap level (y-axis) across 20+ Monte Carlo seeds, "
-            "mapping exactly which estimator minimizes MSE."
+        st.markdown("---")
+        st.markdown("#### 📈 Chart A: Error as Hidden Confounding Grows")
+        st.caption(
+            f"Evaluates all 6 estimators as confounding $c$ scales from 0.0 to 1.0 (30 seeds/level, "
+            f"$n=5,000$, active overlap $\\alpha={st.session_state.overlap:.2f}$, noise $\\sigma={st.session_state.noise:.2f}$)."
         )
+
+        col_metric, _ = st.columns([3, 7])
+        with col_metric:
+            selected_metric = st.radio(
+                "Error Metric",
+                options=["Absolute Bias", "Root Mean Squared Error (RMSE)"],
+                horizontal=True,
+                key="radio_failure_metric",
+            )
+        metric_key = "abs_bias" if selected_metric == "Absolute Bias" else "rmse"
+
+        with st.spinner("Computing confounding sweep across 11 levels and 30 seeds..."):
+            prog_c = st.progress(0, text="Simulating confounding sweep across 30 seeds per point...")
+            prog_c.progress(40, text="Fitting propensity and regression models...")
+            conf_sweep = run_cached_confounding_sweep(
+                n_seeds=30,
+                n_samples=5000,
+                overlap=st.session_state.overlap,
+                noise=st.session_state.noise,
+                base_seed=st.session_state.seed,
+            )
+            prog_c.progress(100, text="Sweep complete!")
+            time.sleep(0.02)
+            prog_c.empty()
+
+        fig_conf = create_confounding_sweep_chart(
+            conf_sweep,
+            metric=metric_key,
+            is_dark=st.session_state.is_dark,
+        )
+        st.plotly_chart(fig_conf, use_container_width=True)
+        render_failure_takeaway_a(conf_sweep)
+
+        st.markdown("---")
+        st.markdown("#### 🌊 Chart B: What Low Overlap Does (Unconfounded $c = 0$)")
+        st.caption(
+            f"Evaluates all estimators as overlap $\\alpha$ varies from 0.1 to 1.0 at $c = 0.0$ (30 seeds/level, "
+            f"$n=5,000$, noise $\\sigma={st.session_state.noise:.2f}$). Displays estimator RMSE and median Kish Effective Sample Size."
+        )
+
+        with st.spinner("Computing overlap sweep across 10 levels and 30 seeds..."):
+            prog_o = st.progress(0, text="Simulating overlap sweep across 30 seeds per point...")
+            prog_o.progress(40, text="Evaluating importance weights and Kish ESS...")
+            ovl_sweep = run_cached_overlap_sweep(
+                n_seeds=30,
+                n_samples=5000,
+                confounding=0.0,
+                noise=st.session_state.noise,
+                base_seed=st.session_state.seed,
+            )
+            prog_o.progress(100, text="Sweep complete!")
+            time.sleep(0.02)
+            prog_o.empty()
+
+        fig_ovl = create_overlap_sweep_chart(
+            ovl_sweep,
+            is_dark=st.session_state.is_dark,
+        )
+        st.plotly_chart(fig_ovl, use_container_width=True)
+        render_failure_takeaway_b(ovl_sweep)
+
+    with tab_decision:
+        st.markdown("### 🗺️ Estimator Decision Map (3×3 Phase Diagram)")
+        st.caption(
+            "Empirical 2D phase matrix across **Confounding** $c \\in \\{0.0, 0.5, 1.0\\}$ and "
+            "**Overlap** $\\alpha \\in \\{0.2, 0.5, 0.9\\}$ across 20+ Monte Carlo seeds per cell ($n=5,000$). "
+            "Winner selection is based strictly on lowest RMSE among valid OPE methods (Naive excluded). "
+            "Cells where the top two estimators are within 10% of each other are classified as **Tie**. "
+            "Whenever the best method's absolute bias exceeds 0.05, the honesty rule marks the cell "
+            "**No Method Reliable**."
+        )
+
+        with st.spinner("Computing 3×3 decision matrix across 180 Monte Carlo replications..."):
+            prog_d = st.progress(0, text="Evaluating 9 parameter cells across 20 seeds each...")
+            prog_d.progress(50, text="Ranking estimators by RMSE and checking honesty tolerance...")
+            dec_map = run_cached_decision_map(
+                n_seeds=20,
+                n_samples=5000,
+                noise=st.session_state.noise,
+                base_seed=st.session_state.seed,
+            )
+            prog_d.progress(100, text="Decision map ready!")
+            time.sleep(0.02)
+            prog_d.empty()
+
+        render_decision_map_summary(dec_map)
+
+        fig_map = create_decision_map_grid_chart(
+            dec_map,
+            is_dark=st.session_state.is_dark,
+        )
+        st.plotly_chart(fig_map, use_container_width=True)
+
+        st.markdown("#### 🔍 Interactive Cell Inspector")
+        inspect_cols = st.columns([2, 2, 8])
+        with inspect_cols[0]:
+            sel_c = st.selectbox(
+                "Confounding (c)",
+                options=[0.0, 0.5, 1.0],
+                format_func=lambda v: f"c = {v:.1f}",
+                key="sel_cell_c",
+            )
+        with inspect_cols[1]:
+            sel_ovl = st.selectbox(
+                "Overlap (α)",
+                options=[0.9, 0.5, 0.2],
+                format_func=lambda v: f"α = {v:.1f}",
+                key="sel_cell_ovl",
+            )
+
+        cell_data = dec_map.cells[(float(sel_c), float(sel_ovl))]
+        cell_rows = []
+        for est_name in ["Doubly Robust", "SNIPW", "IPW", "Direct Method", "Replay", "Naive"]:
+            st_obj = cell_data.stats[est_name]
+            is_win = est_name == cell_data.winner and not cell_data.is_unreliable
+            cell_rows.append({
+                "Estimator": f"★ {est_name}" if is_win else est_name,
+                "Mean Estimate": f"{st_obj.mean_estimate:.4f}",
+                "Bias vs V*": f"{st_obj.bias:+.4f}",
+                "Abs Bias": f"{st_obj.abs_bias:.4f}",
+                "Variance": f"{st_obj.variance:.6f}",
+                "Std Error": f"{st_obj.std_err:.4f}",
+                "RMSE": f"{st_obj.rmse:.4f}",
+                "Status": "Winner" if is_win else ("Naive (Excluded)" if est_name == "Naive" else "Evaluated"),
+            })
+        st.dataframe(pd.DataFrame(cell_rows), use_container_width=True, hide_index=True)
 
     with tab_sensitivity:
         st.markdown("### 🛡️ Confounding Sensitivity Bounds (Rosenbaum Γ)")

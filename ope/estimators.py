@@ -16,6 +16,15 @@ import numpy as np
 from ope.logging_config import logger
 from ope.simulator import Dataset
 
+ESTIMATOR_NAMES = [
+    "Naive",
+    "Replay",
+    "Direct Method",
+    "IPW",
+    "SNIPW",
+    "Doubly Robust",
+]
+
 
 @dataclass(frozen=True)
 class EstimatorResult:

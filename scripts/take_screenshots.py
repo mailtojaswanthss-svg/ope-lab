@@ -66,15 +66,19 @@ def main():
     try:
         ws_url = get_ws_url()
         targets = [
-            ("http://localhost:8501/?tab=results&preset=easy", OUTPUT_DIR / "results_easy_rct.png"),
-            ("http://localhost:8501/?tab=results&preset=low", OUTPUT_DIR / "results_low_overlap.png"),
-            ("http://localhost:8501/?tab=results&preset=trap", OUTPUT_DIR / "results_confounder_trap.png"),
-            ("http://localhost:8501/?tab=results&preset=trap&theme=light", OUTPUT_DIR / "results_light_mode.png"),
-            ("http://localhost:8501/?tab=overview", OUTPUT_DIR / "overview_hero.png"),
+            ("http://localhost:8501/?tab=results&preset=easy", OUTPUT_DIR / "results_easy_rct.png", 4.0),
+            ("http://localhost:8501/?tab=results&preset=low", OUTPUT_DIR / "results_low_overlap.png", 4.0),
+            ("http://localhost:8501/?tab=results&preset=trap", OUTPUT_DIR / "results_confounder_trap.png", 4.0),
+            ("http://localhost:8501/?tab=results&preset=trap&theme=light", OUTPUT_DIR / "results_light_mode.png", 4.0),
+            ("http://localhost:8501/?tab=overview", OUTPUT_DIR / "overview_hero.png", 3.0),
+            ("http://localhost:8501/?tab=failure", OUTPUT_DIR / "failure_study.png", 6.0),
+            ("http://localhost:8501/?tab=failure&theme=light", OUTPUT_DIR / "failure_study_light.png", 6.0),
+            ("http://localhost:8501/?tab=decision", OUTPUT_DIR / "decision_map.png", 6.0),
+            ("http://localhost:8501/?tab=decision&theme=light", OUTPUT_DIR / "decision_map_light.png", 6.0),
         ]
 
-        for url, path in targets:
-            asyncio.run(capture_target(ws_url, url, path, wait_sec=4.0))
+        for url, path, wait_time in targets:
+            asyncio.run(capture_target(ws_url, url, path, wait_sec=wait_time))
 
     finally:
         proc.terminate()

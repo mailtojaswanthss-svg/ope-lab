@@ -15,6 +15,8 @@ from __future__ import annotations
 
 import streamlit as st
 
+from ope.analysis import DecisionMapResult, SweepResult
+
 
 def render_header() -> None:
     """Renders the top navigation brand header."""
@@ -382,6 +384,100 @@ def render_overview_tab() -> None:
             """,
             unsafe_allow_html=True,
         )
+
+
+def render_failure_takeaway_a(sweep_res: SweepResult) -> None:
+    """Renders plain-English takeaway for Chart A computed from real sweep results."""
+    pt_c0 = sweep_res.points[0]
+    candidates = ["Doubly Robust", "SNIPW", "Direct Method", "IPW", "Replay"]
+    best_c0 = min(candidates, key=lambda k: pt_c0.estimator_stats[k].rmse)
+    best_c0_rmse = pt_c0.estimator_stats[best_c0].rmse
+
+    # Confounding levels where bias exceeds 0.05
+    cross_points: dict[str, float | None] = {}
+    for name in ["Doubly Robust", "SNIPW", "IPW", "Direct Method", "Naive"]:
+        cross_val = next(
+            (pt.parameter_value for pt in sweep_res.points if pt.estimator_stats[name].abs_bias > 0.05),
+            None,
+        )
+        cross_points[name] = cross_val
+
+    dr_cross_str = f"c ≥ {cross_points['Doubly Robust']:.1f}" if cross_points["Doubly Robust"] is not None else "c > 1.0"
+    naive_cross_str = f"c ≥ {cross_points['Naive']:.1f}" if cross_points["Naive"] is not None else "c > 1.0"
+
+    content = (
+        f'<div class="insight-box" style="margin-top: 14px;">'
+        f'<div style="font-weight: 750; font-size: 1.02rem; margin-bottom: 6px;">'
+        f'💡 Empirical Takeaway: The Unobserved Confounding Barrier'
+        f'</div>'
+        f'<div>'
+        f'• <b>Ideal Conditions (c = 0.0):</b> <b>{best_c0}</b> achieves the lowest error '
+        f'(RMSE = <code>{best_c0_rmse:.4f}</code>). Because treatment assignment depends solely on observed X, '
+        f'propensity weighting and outcome modeling are asymptotically unbiased.<br>'
+        f'• <b>Confounder Breakdown:</b> As hidden factor <code>U</code> strengthens, <b>all standard OPE estimators fail</b> '
+        f'because no model can adjust for unobserved selection. Absolute bias exceeds the 0.05 critical tolerance '
+        f'at <b>{dr_cross_str}</b> for Doubly Robust (and {naive_cross_str} for Naive). '
+        f'<i>Doubly Robust cannot fix hidden confounding.</i>'
+        f'</div>'
+        f'</div>'
+    )
+    st.markdown(content, unsafe_allow_html=True)
+
+
+def render_failure_takeaway_b(sweep_res: SweepResult) -> None:
+    """Renders plain-English takeaway for Chart B computed from real sweep results."""
+    pt_low = sweep_res.points[0]  # overlap = 0.1
+    pt_high = sweep_res.points[-1]  # overlap = 1.0
+
+    ipw_rmse_low = pt_low.estimator_stats["IPW"].rmse
+    dr_rmse_low = pt_low.estimator_stats["Doubly Robust"].rmse
+    ratio_low = ipw_rmse_low / dr_rmse_low if dr_rmse_low > 0 else 1.0
+
+    content = (
+        f'<div class="insight-box" style="margin-top: 14px;">'
+        f'<div style="font-weight: 750; font-size: 1.02rem; margin-bottom: 6px;">'
+        f'💡 Empirical Takeaway: Overlap Dynamics &amp; Kish Effective Sample Size'
+        f'</div>'
+        f'<div>'
+        f'• <b>Effective Sample Size (ESS):</b> Across the sweep, median Kish ESS ranges from '
+        f'<b>{pt_high.median_ess:,.0f}</b> (at α = 1.0, where logging exploration is maximal) to '
+        f'<b>{pt_low.median_ess:,.0f}</b> (at α = 0.1).<br>'
+        f'• <b>Estimator Robustness:</b> Under unconfounded logging (c = 0.0), <b>Doubly Robust</b> maintains '
+        f'low variance across all overlap levels (RMSE = <code>{dr_rmse_low:.4f}</code> at α = 0.1). '
+        f'IPW achieves RMSE = <code>{ipw_rmse_low:.4f}</code> (ratio to DR: {ratio_low:.2f}×). '
+        f'Self-Normalized IPW (SNIPW) and Doubly Robust provide bounded variance guarantees.'
+        f'</div>'
+        f'</div>'
+    )
+    st.markdown(content, unsafe_allow_html=True)
+
+
+def render_decision_map_summary(decision_map: DecisionMapResult) -> None:
+    """Renders the decision map legend, honesty notes, and cell inspector guidance."""
+    unreliable_count = sum(1 for cell in decision_map.cells.values() if cell.is_unreliable)
+    tie_count = sum(1 for cell in decision_map.cells.values() if cell.is_tie and not cell.is_unreliable)
+    dr_count = sum(
+        1
+        for cell in decision_map.cells.values()
+        if cell.winner == "Doubly Robust" and not cell.is_unreliable and not cell.is_tie
+    )
+
+    badge_html = (
+        f'<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; '
+        f'gap:12px; background:rgba(0,0,0,0.15); padding:12px 18px; border-radius:12px; margin-bottom:18px;">'
+        f'<div>'
+        f'<span style="font-size:0.85rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em;">'
+        f'PHASE DIAGRAM LEGEND:</span> &nbsp; '
+        f'<span style="display:inline-block; padding:3px 10px; border-radius:6px; background:#059669; color:#ffffff; font-size:12px; font-weight:700;">🟩 Doubly Robust ({dr_count})</span> &nbsp;'
+        f'<span style="display:inline-block; padding:3px 10px; border-radius:6px; background:#2563eb; color:#ffffff; font-size:12px; font-weight:700;">🟦 Tie within 10% ({tie_count})</span> &nbsp;'
+        f'<span style="display:inline-block; padding:3px 10px; border-radius:6px; background:#475569; color:#ffffff; font-size:12px; font-weight:700;">⬛ No Method Reliable ({unreliable_count})</span>'
+        f'</div>'
+        f'<div style="font-size:0.82rem; color:#94a3b8;">'
+        f'🔬 <i>Averaged over many random seeds. Simulated data.</i>'
+        f'</div>'
+        f'</div>'
+    )
+    st.markdown(badge_html, unsafe_allow_html=True)
 
 
 def render_footer() -> None:

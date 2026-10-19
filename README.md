@@ -54,15 +54,19 @@ In observational data, correlation is not causation. Customers who received the 
    - Computes worst-case reward bounds under potential unobserved confounding using the sorted-reward threshold sweep over $[w/\Lambda, w \cdot \Lambda]$.
    - Calculates **$\Lambda^*$**: The minimum unobserved confounding required to explain away the policy's estimated value.
 
-6. **Interactive Stress Studies & Decision Map:**
-   - **Failure Study:** Plots error curves across confounding strengths ($c \in [0, 1]$).
-   - **3×3 Decision Map:** Evaluates a grid of Confounding × Overlap regimes with $\ge 20$ replications per cell, identifies the winning estimator, and marks statistically indistinguishable regimes as **Tie**.
+6. **Failure Study (Empirical Monte Carlo Sweeps):**
+   - **Chart A (Confounding Sweep):** Evaluates all 6 estimators as hidden confounding $c$ scales from 0.0 to 1.0 (30 seeds/level, $n=5,000$). Features an interactive toggle between Absolute Bias and RMSE, a 0.05 tolerance threshold line, and real-time plain-English takeaways.
+   - **Chart B (Overlap Breakdown):** Tests overlap decay $\alpha \in [0.1, 1.0]$ at $c=0$, contrasting estimator RMSE alongside median Kish Effective Sample Size ($\text{ESS}$) to reveal IPW variance explosion.
 
-7. **Real Data Tab (Open Bandit Dataset):**
-   - Connects with real-world ZOZOTOWN fashion recommendation logs via the Open Bandit Pipeline (`obp`). If local data files are not present, displays an informative fallback card with exact download instructions and zero fabricated numbers.
+7. **Estimator Decision Map (3×3 Empirical Phase Diagram):**
+   - 9-cell grid mapping Confounding $c \in \{0.0, 0.5, 1.0\} \times$ Overlap $\alpha \in \{0.2, 0.5, 0.9\}$ with $\ge 20$ replications per cell ($n=5,000$).
+   - **Winner Selection:** Strict lowest RMSE (Naive excluded).
+   - **Tie Detection:** Cells where the top two estimators are within 10% RMSE are marked **Tie**.
+   - **Mandatory Honesty Rule:** When the lowest-RMSE estimator has $|Bias| > 0.05$, the cell is marked **"No method reliable"** (muted slate) — upholding causal integrity because hidden confounding invalidates unadjusted OPE methods.
+   - **Cell Inspector:** Interactive dropdown to inspect exact Mean, Bias, Abs Bias, Variance, Std Error, and RMSE across all 6 estimators for any parameter combination.
 
 8. **Automated Evidence & Facts Generator:**
-   - Includes standalone scripts (`scripts/make_abstract_facts.py`) that run multi-seed simulations to generate exact, verifiable numbers for research abstracts.
+   - Standalone CLI pipeline (`scripts/make_abstract_facts.py`) executing multi-seed Monte Carlo benchmarks and adaptive bootstrap inference. Outputs exact, verifiable empirical numbers directly to `docs/abstract_facts.md` (no fabricated data).
 
 ---
 
@@ -163,7 +167,7 @@ Open your browser at `http://localhost:8501`.
 
 ---
 
-## 🎬 How to Demo in 60 Seconds
+## 🎬 How to Demo in 90 Seconds
 
 1. **Step 1: The Intuition (15s)**
    - Click the **📖 Overview** tab.
@@ -181,11 +185,18 @@ Open your browser at `http://localhost:8501`.
    - Show the prominent orange **⚠️ Unobserved Confounding Active** banner:
      *"Doubly Robust protects against model misspecification under unconfoundedness, but CANNOT fix hidden confounding."*
    - Show that all estimators exhibit positive bias, proving why sensitivity bounds are mandatory before deployment.
-
+5. **Step 5: Failure Study Sweeps (15s)**
+   - Switch to the **💥 Failure Study** tab.
+   - Toggle between **Absolute Bias** and **RMSE** to show how error scales with hidden confounding $c$.
+   - Highlight the 0.05 red tolerance threshold line and the dynamic takeaway explaining which estimators fail first.
+6. **Step 6: Estimator Decision Map (15s)**
+   - Switch to the **🗺️ Decision Map** tab.
+   - Point to the 3×3 phase matrix: show where **Doubly Robust / SNIPW** win, where **Ties** occur, and the gray **"No Method Reliable"** zone where hidden confounding exceeds tolerance.
+   - Use the **Cell Inspector** dropdowns to view exact empirical metrics across all 6 estimators.
 
 ---
 
-## 🧪 Running Tests & Linting
+## 🧪 Running Tests, Linting & Fact Generation
 
 ```bash
 # Run unit and smoke tests
@@ -193,6 +204,9 @@ python -m pytest -q
 
 # Run linter
 ruff check .
+
+# Generate verified empirical numbers for hackathon abstract
+python scripts/make_abstract_facts.py
 ```
 
 ---
