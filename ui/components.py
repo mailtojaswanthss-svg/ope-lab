@@ -1,11 +1,13 @@
-"""UI Components for OPE Lab.
+"""Modern, presentation-ready UI Components for OPE Lab.
 
-Provides reusable presentation components:
-- Mission-control header
-- 4 key metric cards (Ground Truth, Naive, Doubly Robust, Weight Health)
-- Weight Health status badge (Healthy / Caution / Unreliable)
-- Contextual Insight Banner (with mandatory unobserved confounding warning)
-- Overview Tab (The Coupon Story + 5-step pipeline diagram)
+Provides:
+- Hero section for the Overview tab with animated gradient mesh and headline:
+  "Did the policy really work?"
+- Calculator-style Results layout components:
+  * Large headline result card highlighting Naive estimation error vs ground truth
+  * Two sub-stat cards (Doubly Robust estimate & Weight Health with pill status badge)
+- Key Insight Banner: Orange (#f97316) strictly reserved for key causal warnings
+- 5-step interactive pipeline cards
 - Mission control footer
 """
 
@@ -15,19 +17,35 @@ import streamlit as st
 
 
 def render_header() -> None:
-    """Renders the futuristic mission-control header."""
+    """Renders the top navigation brand header."""
     st.markdown(
         """
-        <div class="mission-header">
-            <div class="header-logo">
-                <span>🛰️ PERCEPTRON HACKATHON 2026</span>
-                <span>•</span>
-                <span>PROBLEM 3</span>
+        <div class="mission-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div>
+                <div class="hero-badge">🛰️ PERCEPTRON HACKATHON 2026 • PROBLEM 3</div>
+                <div class="brand-title">
+                    OPE Lab <span class="brand-subtitle">| Off-Policy Evaluation Studio</span>
+                </div>
             </div>
-            <h1 class="header-title">OPE Lab: Off-Policy Evaluation Studio</h1>
-            <p class="header-subtitle">
-                Did the policy actually work, or did it just look like it did?
-                Evaluate new decision policies using logged data before risking live production traffic.
+            <div style="font-size: 0.88rem; font-weight: 500;">
+                Target: <code style="color:#0284c7; font-weight:700;">V*(π<sub>e</sub>) = 0.6798</code>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_overview_hero() -> None:
+    """Renders the Hero section at the top of the Overview tab with animated gradient mesh."""
+    st.markdown(
+        """
+        <div class="hero-section">
+            <div class="hero-badge">CAUSAL DECISION INTELLIGENCE</div>
+            <h1 class="hero-title">Did the policy really work?</h1>
+            <p class="hero-subtitle">
+                Off-policy evaluation separates genuine causal lift from observational illusion
+                using logged historical data—before you risk budget, brand, or live production traffic.
             </p>
         </div>
         """,
@@ -35,45 +53,74 @@ def render_header() -> None:
     )
 
 
-def get_health_badge(ess_ratio: float) -> tuple[str, str]:
-    """Returns CSS class and status label for Kish's Effective Sample Size ratio."""
+def get_health_pill(ess_ratio: float) -> tuple[str, str]:
+    """Returns CSS class and pill status label for Kish's Effective Sample Size ratio."""
     if ess_ratio >= 0.30:
-        return "chip-healthy", "HEALTHY"
+        return "pill-healthy", "HEALTHY"
     elif ess_ratio >= 0.10:
-        return "chip-caution", "CAUTION"
+        return "pill-caution", "CAUTION"
     else:
-        return "chip-unreliable", "UNRELIABLE"
+        return "pill-unreliable", "UNRELIABLE"
 
 
-def render_metric_cards(
-    true_val: float,
+def render_calculator_headline_card(
     naive_val: float,
+    true_val: float,
     naive_ci: tuple[float, float],
+) -> None:
+    """Renders the large headline result card showing the error of Naive vs the truth in large glowing type."""
+    naive_bias = naive_val - true_val
+    naive_abs_err = abs(naive_bias)
+    naive_pct = (naive_abs_err / true_val) * 100 if true_val > 0 else 0.0
+    sign = "+" if naive_bias >= 0 else ""
+
+    glow_color = "rgba(239, 68, 68, 0.4)" if naive_abs_err > 0.05 else "rgba(16, 185, 129, 0.4)"
+    num_color = "#ef4444" if naive_abs_err > 0.05 else "#10b981"
+
+    st.markdown(
+        f"""
+        <div class="headline-result-card">
+            <div class="headline-label">Naive Observational Bias (Selection Illusion)</div>
+            <div class="headline-number" style="color: {num_color}; text-shadow: 0 0 24px {glow_color};">
+                {sign}{naive_bias:.4f} <span style="font-size: 1.8rem; font-weight:700; color:#94a3b8;">({naive_pct:.1f}% error)</span>
+            </div>
+            <div class="headline-desc">
+                Naive estimate observed in raw logs: <b style="color:inherit; font-weight:750;">{naive_val:.4f}</b> 
+                [95% CI: {naive_ci[0]:.3f}, {naive_ci[1]:.3f}] vs True Interventional Target: 
+                <b style="color:#22d3ee;">{true_val:.4f}</b>.
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_calculator_stat_cards(
     dr_val: float,
+    true_val: float,
     dr_ci: tuple[float, float],
     ess: float,
     max_weight: float,
     n: int,
 ) -> None:
-    """Renders the 4 key glass-card metrics at the top of the Results tab."""
-    col1, col2, col3, col4 = st.columns(4)
-
-    naive_bias = naive_val - true_val
-    naive_sign = "+" if naive_bias >= 0 else ""
+    """Renders two smaller stat cards beneath the headline number."""
     dr_bias = dr_val - true_val
     dr_sign = "+" if dr_bias >= 0 else ""
+    dr_color = "#10b981" if abs(dr_bias) < 0.05 else "#22d3ee"
 
     ess_ratio = ess / n if n > 0 else 0.0
-    chip_class, chip_label = get_health_badge(ess_ratio)
+    chip_class, chip_label = get_health_pill(ess_ratio)
+
+    col1, col2 = st.columns(2)
 
     with col1:
         st.markdown(
             f"""
-            <div class="glass-card">
-                <div class="glass-metric-label">Target Interventional Value</div>
-                <div class="glass-metric-value" style="color: #22d3ee;">{true_val:.4f}</div>
-                <div class="glass-metric-delta" style="color: #94a3b8;">
-                    Ground Truth V*(π<sub>e</sub>)
+            <div class="stat-card">
+                <div class="stat-label">Doubly Robust (DR) Estimate</div>
+                <div class="stat-value" style="color: {dr_color};">{dr_val:.4f}</div>
+                <div class="stat-subtext">
+                    Bias: <b>{dr_sign}{dr_bias:.4f}</b> • 95% CI: [{dr_ci[0]:.3f}, {dr_ci[1]:.3f}]
                 </div>
             </div>
             """,
@@ -81,48 +128,16 @@ def render_metric_cards(
         )
 
     with col2:
-        naive_color = "#f87171" if abs(naive_bias) > 0.05 else "#34d399"
         st.markdown(
             f"""
-            <div class="glass-card">
-                <div class="glass-metric-label">Naive Logging Value</div>
-                <div class="glass-metric-value" style="color: {naive_color};">{naive_val:.4f}</div>
-                <div class="glass-metric-delta" style="color: {naive_color};">
-                    Bias: {naive_sign}{naive_bias:.4f} <span style="color:#64748b;">[{naive_ci[0]:.3f}, {naive_ci[1]:.3f}]</span>
+            <div class="stat-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <span class="stat-label">Weight Diagnostics</span>
+                    <span class="pill-chip {chip_class}">{chip_label}</span>
                 </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    with col3:
-        dr_color = "#34d399" if abs(dr_bias) < 0.05 else "#fbbf24"
-        st.markdown(
-            f"""
-            <div class="glass-card">
-                <div class="glass-metric-label">Doubly Robust (DR)</div>
-                <div class="glass-metric-value" style="color: {dr_color};">{dr_val:.4f}</div>
-                <div class="glass-metric-delta" style="color: {dr_color};">
-                    Bias: {dr_sign}{dr_bias:.4f} <span style="color:#64748b;">[{dr_ci[0]:.3f}, {dr_ci[1]:.3f}]</span>
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    with col4:
-        st.markdown(
-            f"""
-            <div class="glass-card">
-                <div class="glass-metric-label" style="display:flex; justify-content:space-between; align-items:center;">
-                    <span>Weight Diagnostics</span>
-                    <span class="status-chip {chip_class}">{chip_label}</span>
-                </div>
-                <div class="glass-metric-value" style="font-size: 1.55rem;">
-                    {ess:.0f} <span style="font-size:0.95rem; color:#94a3b8; font-weight:500;">ESS ({ess_ratio:.1%})</span>
-                </div>
-                <div class="glass-metric-delta" style="color: #cbd5e1;">
-                    Max Weight: <b>{max_weight:.2f}</b> <span style="color:#64748b;">(n = {n:,})</span>
+                <div class="stat-value">{ess:,.0f} <span style="font-size:0.92rem; font-weight:500; color:#94a3b8;">ESS ({ess_ratio:.1%})</span></div>
+                <div class="stat-subtext">
+                    Max Weight: <b>{max_weight:.2f}</b> • Sample size: {n:,}
                 </div>
             </div>
             """,
@@ -139,7 +154,7 @@ def render_insight_banner(
     """Renders the contextual dynamic takeaway banner.
 
     MANDATORY RULE: If confounding > 0.2, explicitly warn that all estimators can
-    be biased due to unobserved confounding. Never claim Doubly Robust fixes it.
+    be biased due to unobserved confounding using the reserved Orange accent.
     """
     if confounding > 0.2:
         title = f"⚠️ Unobserved Confounding Active (Confounding = {confounding:.2f})"
@@ -148,19 +163,17 @@ def render_insight_banner(
             "treatment effect. <b>Because no estimator can observe <code>U</code>, all standard OPE "
             "estimators (including Doubly Robust, SNIPW, and IPW) are subject to omitted-variable bias.</b> "
             "Doubly Robust protects against misspecification of observed models under unconfoundedness, "
-            "but <i>cannot fix hidden confounding</i>. Explore the <b>Sensitivity</b> tab to calculate "
-            "the critical Rosenbaum sensitivity bound Γ."
+            "but <i>cannot fix hidden confounding</i>. Explore the <b>Sensitivity</b> tab to evaluate "
+            "worst-case bounds under unobserved confounding."
         )
-        border_color = "#f97316"
     elif overlap < 0.25:
         title = f"⚠️ Severe Overlap Deficit (Overlap = {overlap:.2f})"
         message = (
             f"The logging policy is near-deterministic in parts of the context space. "
-            f"Standard IPW suffers from extreme weight spikes and explosive variance. "
+            f"Standard IPW exhibits severe weight spikes and wide confidence intervals. "
             f"<b>Self-Normalized IPW (SNIPW)</b> and <b>Doubly Robust (DR)</b> stabilize variance, "
-            f"as reflected in Kish's ESS ({ess_ratio:.1%}). Notice the widened confidence interval on IPW."
+            f"yielding an Effective Sample Size ratio of {ess_ratio:.1%}."
         )
-        border_color = "#eab308"
     else:
         title = f"✅ Unconfounded Regime with Positive Overlap (c = {confounding:.2f}, α = {overlap:.2f})"
         message = (
@@ -169,12 +182,11 @@ def render_insight_banner(
             f"<b>{closest_estimator}</b> achieved the closest empirical value to the true interventional target "
             f"in this dataset."
         )
-        border_color = "#22d3ee"
 
     st.markdown(
         f"""
-        <div class="insight-box" style="border-left-color: {border_color};">
-            <div style="font-weight: 700; font-size: 1.02rem; margin-bottom: 4px;">{title}</div>
+        <div class="insight-box">
+            <div style="font-weight: 750; font-size: 1.02rem; margin-bottom: 6px;">{title}</div>
             <div>{message}</div>
         </div>
         """,
@@ -183,16 +195,18 @@ def render_insight_banner(
 
 
 def render_overview_tab() -> None:
-    """Renders the Overview tab featuring the Coupon Story and 5-Step Pipeline."""
-    st.markdown("### 🏷️ The Intuition: The Coupon Story")
+    """Renders the Overview tab featuring the Hero, Coupon Story, and 5-Step Pipeline."""
+    render_overview_hero()
+
+    st.markdown("### 🏷️ The Intuition: The Coupon Dilemma")
     st.markdown(
         r"""
         Imagine an e-commerce platform running an old promotion policy:
-        > **Old Policy (Logging $\pi_0$):** High-spending customers with high loyalty scores ($X > 0$) 
+        > **Old Logging Policy ($\pi_0$):** High-spending customers with high loyalty scores ($X > 0$) 
         > were almost always sent a 20% discount coupon ($A = 1$). Low-spending visitors rarely received one.
 
-        Now, marketing proposes a **New Policy ($\pi_e$)**:
-        > **New Policy ($\pi_e$):** Send a coupon strictly to users with positive engagement ($X > 0$).
+        Now, marketing proposes a **New Target Policy ($\pi_e$):**
+        > **New Target Policy ($\pi_e$):** Send a coupon strictly to users with positive engagement ($X > 0$).
         
         **Why can't you just look at average revenue among coupon recipients?**
         - **The Naive Trap:** Customers who got coupons were already your most loyal, high-spending buyers! 
@@ -212,10 +226,10 @@ def render_overview_tab() -> None:
     with p1:
         st.markdown(
             """
-            <div class="step-card">
-                <div class="step-num">1</div>
-                <div style="font-weight: 700; font-size: 0.9rem; margin-bottom: 6px;">Logged Data</div>
-                <div style="font-size: 0.8rem; color: #94a3b8;">
+            <div class="glass-card" style="padding: 18px;">
+                <div style="font-size:0.75rem; font-weight:800; color:#22d3ee; margin-bottom:4px;">STEP 1</div>
+                <div style="font-weight: 750; font-size: 0.95rem; margin-bottom: 6px;">Logged Data</div>
+                <div style="font-size: 0.82rem; color: #94a3b8; line-height:1.4;">
                     Observe historical interactions (X, A, R) recorded under logging policy π₀.
                 </div>
             </div>
@@ -225,10 +239,10 @@ def render_overview_tab() -> None:
     with p2:
         st.markdown(
             """
-            <div class="step-card">
-                <div class="step-num">2</div>
-                <div style="font-weight: 700; font-size: 0.9rem; margin-bottom: 6px;">Propensity Model</div>
-                <div style="font-size: 0.8rem; color: #94a3b8;">
+            <div class="glass-card" style="padding: 18px;">
+                <div style="font-size:0.75rem; font-weight:800; color:#22d3ee; margin-bottom:4px;">STEP 2</div>
+                <div style="font-weight: 750; font-size: 0.95rem; margin-bottom: 6px;">Propensity Model</div>
+                <div style="font-size: 0.82rem; color: #94a3b8; line-height:1.4;">
                     Estimate ê(X) = P(A=1|X) using fast logistic regression.
                 </div>
             </div>
@@ -238,11 +252,11 @@ def render_overview_tab() -> None:
     with p3:
         st.markdown(
             """
-            <div class="step-card">
-                <div class="step-num">3</div>
-                <div style="font-weight: 700; font-size: 0.9rem; margin-bottom: 6px;">Weight Diagnostics</div>
-                <div style="font-size: 0.8rem; color: #94a3b8;">
-                    Calculate W = πₑ(A|X)/ê(X), track Kish's ESS and maximum weight spikes.
+            <div class="glass-card" style="padding: 18px;">
+                <div style="font-size:0.75rem; font-weight:800; color:#22d3ee; margin-bottom:4px;">STEP 3</div>
+                <div style="font-weight: 750; font-size: 0.95rem; margin-bottom: 6px;">Weight Health</div>
+                <div style="font-size: 0.82rem; color: #94a3b8; line-height:1.4;">
+                    Calculate W = πₑ/ê(X), monitor Kish's ESS and weight spikes.
                 </div>
             </div>
             """,
@@ -251,11 +265,11 @@ def render_overview_tab() -> None:
     with p4:
         st.markdown(
             """
-            <div class="step-card">
-                <div class="step-num">4</div>
-                <div style="font-weight: 700; font-size: 0.9rem; margin-bottom: 6px;">Outcome Model</div>
-                <div style="font-size: 0.8rem; color: #94a3b8;">
-                    Fit Q̂(X,A) to predict expected rewards and enable Doubly Robust augmentation.
+            <div class="glass-card" style="padding: 18px;">
+                <div style="font-size:0.75rem; font-weight:800; color:#22d3ee; margin-bottom:4px;">STEP 4</div>
+                <div style="font-weight: 750; font-size: 0.95rem; margin-bottom: 6px;">Outcome Model</div>
+                <div style="font-size: 0.82rem; color: #94a3b8; line-height:1.4;">
+                    Fit Q̂(X,A) to predict expected rewards and enable Doubly Robust.
                 </div>
             </div>
             """,
@@ -264,11 +278,11 @@ def render_overview_tab() -> None:
     with p5:
         st.markdown(
             """
-            <div class="step-card">
-                <div class="step-num">5</div>
-                <div style="font-weight: 700; font-size: 0.9rem; margin-bottom: 6px;">Evaluation & CI</div>
-                <div style="font-size: 0.8rem; color: #94a3b8;">
-                    Estimate V̂(πₑ) with 95% bootstrap confidence intervals for risk-aware decisions.
+            <div class="glass-card" style="padding: 18px;">
+                <div style="font-size:0.75rem; font-weight:800; color:#22d3ee; margin-bottom:4px;">STEP 5</div>
+                <div style="font-weight: 750; font-size: 0.95rem; margin-bottom: 6px;">Evaluation & CI</div>
+                <div style="font-size: 0.82rem; color: #94a3b8; line-height:1.4;">
+                    Estimate V̂(πₑ) with 95% bootstrap confidence intervals.
                 </div>
             </div>
             """,

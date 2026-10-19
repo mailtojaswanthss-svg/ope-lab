@@ -3,10 +3,11 @@
 Features:
 - Dot-and-whisker plot with 95% bootstrap confidence intervals for all 6 estimators
 - High-contrast semantic palette with distinct marker shapes for color-blind accessibility
-- Ground truth reference line (V* = 0.6798)
+- Ground truth reference line (V* = 0.6798) with direct label
 - Gold halo highlight around the top-performing estimator
+- Plain-English chart title: "How far off is each method?"
 - Weight distribution histogram with log/linear scale and ESS annotation
-- Full theme awareness (dark mission control / clean light)
+- Full theme awareness (dark mission control / clean light) and transparent background
 """
 
 from __future__ import annotations
@@ -71,10 +72,10 @@ def create_estimator_ci_chart(
 
     fig = go.Figure()
 
-    # Base theme styling
+    # Base theme styling: transparent background and thin grid lines
     text_color = "#f8fafc" if is_dark else "#0f172a"
-    grid_color = "rgba(255, 255, 255, 0.08)" if is_dark else "rgba(0, 0, 0, 0.08)"
-    card_bg = "rgba(11, 18, 32, 0.0)"
+    grid_color = "rgba(255, 255, 255, 0.06)" if is_dark else "rgba(0, 0, 0, 0.06)"
+    transparent_bg = "rgba(0, 0, 0, 0)"
 
     for name in estimator_names:
         res = boot_summary.get(name)
@@ -95,8 +96,8 @@ def create_estimator_ci_chart(
                     y=[res.point_estimate],
                     mode="markers",
                     marker={
-                        "size": 24,
-                        "color": "rgba(234, 179, 8, 0.25)",
+                        "size": 26,
+                        "color": "rgba(234, 179, 8, 0.22)",
                         "symbol": "circle",
                         "line": {"color": "#eab308", "width": 2.5},
                     },
@@ -112,7 +113,7 @@ def create_estimator_ci_chart(
             f"Estimate: {res.point_estimate:.4f}<br>"
             f"95% CI: [{res.ci_lower:.4f}, {res.ci_upper:.4f}]<br>"
             f"Std Error: ±{res.std_err:.4f}<br>"
-            f"Bias vs V*: {bias_str}<br>"
+            f"Bias vs Target V*: {bias_str}<br>"
             + ("<b>★ Lowest Bias in Sample</b>" if is_winner else "")
         )
 
@@ -131,7 +132,7 @@ def create_estimator_ci_chart(
                 },
                 mode="markers",
                 marker={
-                    "size": 12,
+                    "size": 13,
                     "color": color,
                     "symbol": symbol,
                     "line": {
@@ -146,26 +147,26 @@ def create_estimator_ci_chart(
             )
         )
 
-    # Reference line for Ground Truth V*
+    # Reference line for Ground Truth V* with clear direct label
     fig.add_hline(
         y=true_val,
         line_dash="dash",
         line_color="#22d3ee",
         line_width=2,
-        annotation_text=f"True Interventional V* = {true_val:.4f}",
+        annotation_text=f"Ground Truth Target V* = {true_val:.4f}",
         annotation_position="top right",
-        annotation_font={"color": "#22d3ee", "size": 11},
+        annotation_font={"color": "#22d3ee", "size": 11, "family": "Inter, sans-serif"},
     )
 
     fig.update_layout(
         title={
-            "text": "<b>Estimator Policy Value vs. Ground Truth (95% Bootstrap CI)</b>",
+            "text": "<b>How far off is each method? (95% Bootstrap CI vs Target)</b>",
             "font": {"color": text_color, "size": 15},
             "x": 0.01,
             "y": 0.96,
         },
-        paper_bgcolor=card_bg,
-        plot_bgcolor=card_bg,
+        paper_bgcolor=transparent_bg,
+        plot_bgcolor=transparent_bg,
         font={"color": text_color, "family": "Inter, sans-serif"},
         xaxis={
             "title": "<b>Estimator</b>",
@@ -200,8 +201,8 @@ def create_weight_distribution_chart(
         Plotly Figure showing weight distribution and diagnostic cutoffs.
     """
     text_color = "#f8fafc" if is_dark else "#0f172a"
-    grid_color = "rgba(255, 255, 255, 0.08)" if is_dark else "rgba(0, 0, 0, 0.08)"
-    card_bg = "rgba(11, 18, 32, 0.0)"
+    grid_color = "rgba(255, 255, 255, 0.06)" if is_dark else "rgba(0, 0, 0, 0.06)"
+    transparent_bg = "rgba(0, 0, 0, 0)"
 
     fig = go.Figure()
 
@@ -229,22 +230,22 @@ def create_weight_distribution_chart(
     fig.add_vline(
         x=p99,
         line_dash="dot",
-        line_color="#fbbf24",
+        line_color="#2dd4bf",
         line_width=1.5,
         annotation_text=f"99th %ile: {p99:.2f}",
         annotation_position="top right",
-        annotation_font={"color": "#fbbf24", "size": 10},
+        annotation_font={"color": "#2dd4bf", "size": 10},
     )
 
     fig.update_layout(
         title={
-            "text": f"<b>Propensity Weight Distribution (Max: {max_w:.2f})</b>",
+            "text": f"<b>Importance Weight Diagnostics (Max: {max_w:.2f})</b>",
             "font": {"color": text_color, "size": 13},
             "x": 0.01,
             "y": 0.96,
         },
-        paper_bgcolor=card_bg,
-        plot_bgcolor=card_bg,
+        paper_bgcolor=transparent_bg,
+        plot_bgcolor=transparent_bg,
         font={"color": text_color, "family": "Inter, sans-serif"},
         xaxis={
             "title": "Weight W<sub>i</sub> = π<sub>e</sub>(A<sub>i</sub>|X<sub>i</sub>) / ê(X<sub>i</sub>)",
