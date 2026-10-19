@@ -75,14 +75,15 @@ The simulator implements a known causal Data Generating Process (DGP):
   $$\pi_0(A=1 \mid X, U) = \sigma(L \cdot X + 3c \cdot U)$$
   where $L = 0.5 + 5(1 - \text{overlap})$ controls propensity positivity.
 - Structural Reward Equation:
-  $$R = 0.5 + 0.3X + A(0.2 + 0.2X) + 0.4U + \sigma_{\text{noise}} \epsilon$$
+  $$R = 0.5 + 0.3X + A(0.2 + 0.2X + 0.5U) + 0.4U + \sigma_{\text{noise}} \epsilon$$
+  *(The interaction term $0.5 A \cdot U$ ensures that hidden confounder $U$ modifies the treatment effect directly, exposing estimators to genuine omitted-variable bias in observational logged data).*
 - New Target Policy to Evaluate ($\pi_e$):
   Treat ($A=1$) if $X > 0$, else do not treat ($A=0$).
 
 ### Analytical Interventional Value:
 Under Pearl's causal intervention $\text{do}(A = \pi_e(X))$:
-$$V^*(\pi_e) = \mathbb{E}[R \mid \text{do}(A = \pi_e(X))] = 0.5 + 0.3\,\mathbb{E}[X] + 0.2\,\mathbb{E}[\mathbb{I}(X > 0)] + 0.2\,\mathbb{E}[X \cdot \mathbb{I}(X > 0)] + 0.4\,\mathbb{E}[U]$$
-Since $\mathbb{E}[X]=0$, $\mathbb{E}[U]=0$, $\mathbb{E}[\mathbb{I}(X>0)]=0.5$, and $\mathbb{E}[X \cdot \mathbb{I}(X>0)] = \frac{1}{\sqrt{2\pi}} \approx 0.398942$:
+$$V^*(\pi_e) = \mathbb{E}[R \mid \text{do}(A = \pi_e(X))] = 0.5 + 0.3\,\mathbb{E}[X] + 0.2\,\mathbb{E}[\mathbb{I}(X > 0)] + 0.2\,\mathbb{E}[X \cdot \mathbb{I}(X > 0)] + 0.5\,\mathbb{E}[\mathbb{I}(X > 0) \cdot U] + 0.4\,\mathbb{E}[U]$$
+Since $\mathbb{E}[X]=0$, $\mathbb{E}[U]=0$, $U \perp X \implies \mathbb{E}[\mathbb{I}(X > 0) \cdot U] = 0$, $\mathbb{E}[\mathbb{I}(X>0)]=0.5$, and $\mathbb{E}[X \cdot \mathbb{I}(X>0)] = \frac{1}{\sqrt{2\pi}} \approx 0.398942$:
 $$V^*(\pi_e) = 0.5 + 0.1 + 0.2 \times 0.398942 = 0.679788$$
 
 Estimators **never observe $U$**, reflecting the real-world challenge where unmeasured confounding distorts propensity scores.
@@ -159,6 +160,28 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 Open your browser at `http://localhost:8501`.
+
+---
+
+## 🎬 How to Demo in 60 Seconds
+
+1. **Step 1: The Intuition (15s)**
+   - Click the **📖 Overview** tab.
+   - Point to the **Coupon Story** and explain: "If high-spenders always got coupons in historical logs, comparing coupon recipients to non-recipients is fatally biased."
+2. **Step 2: The Ideal RCT Baseline (15s)**
+   - Click the sidebar button **`Easy RCT`** ($c=0.0, \text{overlap}=0.9$).
+   - Switch to the **📊 Results** tab.
+   - Show how **Doubly Robust (DR)** and **IPW** align closely with the cyan dashed Ground Truth $V^* = 0.6798$ with tight 95% bootstrap confidence intervals.
+3. **Step 3: The Low Overlap Stress Test (15s)**
+   - Click the sidebar button **`Low Ovl`** ($c=0.0, \text{overlap}=0.15$).
+   - Point to the weight histogram: importance weights spike, and standard IPW's error bars explode.
+   - Show how **SNIPW** and **DR** remain stable and controlled.
+4. **Step 4: The Confounding Trap (15s)**
+   - Click the sidebar button **`Trap`** ($c=0.8, \text{overlap}=0.7$).
+   - Show the prominent orange **⚠️ Unobserved Confounding Active** banner:
+     *"Doubly Robust protects against model misspecification under unconfoundedness, but CANNOT fix hidden confounding."*
+   - Show that all estimators exhibit positive bias, proving why sensitivity bounds are mandatory before deployment.
+
 
 ---
 

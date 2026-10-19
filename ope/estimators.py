@@ -9,7 +9,7 @@ Estimators never observe the hidden confounder u.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 
@@ -37,10 +37,16 @@ class EvaluationSummary:
     ess_ratio: float  # ESS / n
     true_value: float
     best_estimator: str  # Best among valid OPE methods (excluding Naive)
+    weights: np.ndarray = field(default_factory=lambda: np.array([], dtype=float))
 
     def get(self, name: str) -> EstimatorResult:
         """Retrieves an individual estimator result by name."""
         return self.results[name]
+
+
+# Aliases for convenience
+EstimatorSummary = EvaluationSummary
+compute_all_estimators = None  # Defined below after evaluate_all_estimators
 
 
 def fast_logistic_propensity(
@@ -314,4 +320,8 @@ def evaluate_all_estimators(dataset: Dataset) -> EvaluationSummary:
         ess_ratio=ess_ratio,
         true_value=v_star,
         best_estimator=best_est,
+        weights=w,
     )
+
+
+compute_all_estimators = evaluate_all_estimators
