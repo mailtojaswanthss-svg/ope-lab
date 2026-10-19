@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import { cn } from './cn'
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'stage'
+type Variant = 'primary' | 'secondary' | 'ghost' | 'stage' | 'light' | 'glass'
 type Size = 'md' | 'sm'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -16,6 +16,9 @@ const VARIANTS: Record<Variant, string> = {
   secondary: 'border-thin border-line-strong bg-surface text-fg hover:bg-surface-muted hover:-translate-y-0.5 active:translate-y-0',
   ghost: 'text-fg-muted hover:bg-surface-muted hover:text-fg',
   stage: 'border-thin border-stage-ghost bg-stage-surface text-stage-fg hover:bg-stage-line',
+  // For fluted-glass surfaces.
+  light: 'bg-on-flute text-stage shadow-md hover:bg-flute-1 hover:-translate-y-0.5 active:translate-y-0',
+  glass: 'border-thin border-glass-line bg-glass text-on-flute backdrop-blur-md hover:bg-glass-strong hover:-translate-y-0.5 active:translate-y-0',
 }
 
 const SIZES: Record<Size, string> = {

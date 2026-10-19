@@ -134,6 +134,57 @@
   --ds-color-insight: #fb923c;
   --ds-color-insight-ink: #c2410c;
 
+  /* ---------- Color: fluted-glass spectrum (hero, page headers; constant across modes) ---------- */
+  --ds-color-flute-1: #e4e9fc; /* frost */
+  --ds-color-flute-2: #a8d2f4; /* ice blue */
+  --ds-color-flute-3: #5aaee8; /* sky */
+  --ds-color-flute-4: #2a7fd4; /* ocean */
+  --ds-color-flute-5: #1d5fae; /* deep blue */
+  --ds-color-flute-6: #2f8a6c; /* jade */
+  --ds-color-flute-7: #1e5a43; /* forest */
+  --ds-color-flute-8: #8e7b8c; /* mauve */
+  --ds-color-flute-9: #ea8cc2; /* blush */
+  --ds-color-flute-10: #e8569f; /* fuchsia */
+  --ds-color-flute-11: #1c4a37; /* pine */
+  --ds-color-on-flute: #ffffff;
+  --ds-color-on-flute-muted: rgb(255 255 255 / 0.9);
+  --ds-color-glass: rgb(255 255 255 / 0.16);
+  --ds-color-glass-strong: rgb(255 255 255 / 0.28);
+  --ds-color-glass-line: rgb(255 255 255 / 0.42);
+
+  /* Glass ribs: width of one flute, its lit edge, its shaded edge. */
+  --ds-flute-width: 1.75rem;
+  --ds-flute-width-sm: 0.75rem;
+  --ds-flute-highlight: rgb(255 255 255 / 0.42);
+  --ds-flute-shade: rgb(6 10 28 / 0.3);
+  --ds-flute-glow: rgb(255 255 255 / 0.3);
+  --ds-flute-scrim: rgb(6 10 28 / 0.34);
+  --ds-flute-scrim-strong: rgb(6 10 28 / 0.52);
+  --ds-shadow-text-flute: 0 2px 24px rgb(6 10 28 / 0.4), 0 1px 2px rgb(6 10 28 / 0.3);
+  --ds-duration-flute: 18s;
+
+  /* One spectrum per tab. Reorder or swap stops to restyle a page header. */
+  --ds-gradient-home: linear-gradient(
+    90deg,
+    var(--ds-color-flute-1),
+    var(--ds-color-flute-2) 9%,
+    var(--ds-color-flute-3) 19%,
+    var(--ds-color-flute-4) 29%,
+    var(--ds-color-flute-5) 39%,
+    var(--ds-color-flute-6) 49%,
+    var(--ds-color-flute-7) 57%,
+    var(--ds-color-flute-8) 66%,
+    var(--ds-color-flute-9) 76%,
+    var(--ds-color-flute-10) 86%,
+    var(--ds-color-flute-11)
+  );
+  --ds-gradient-story: linear-gradient(90deg, var(--ds-color-flute-8), var(--ds-color-orange), var(--ds-color-yellow), var(--ds-color-orange), var(--ds-color-flute-9), var(--ds-color-flute-10), var(--ds-color-flute-8));
+  --ds-gradient-estimators: linear-gradient(90deg, var(--ds-color-flute-5), var(--ds-color-flute-4), var(--ds-color-flute-3), var(--ds-color-flute-2), var(--ds-color-flute-3), var(--ds-color-est-ipw), var(--ds-color-flute-5));
+  --ds-gradient-lab: linear-gradient(90deg, var(--ds-color-flute-7), var(--ds-color-flute-6), var(--ds-color-teal), var(--ds-color-flute-2), var(--ds-color-flute-3), var(--ds-color-flute-6), var(--ds-color-flute-11));
+  --ds-gradient-studies: linear-gradient(90deg, var(--ds-color-flute-10), var(--ds-color-flute-9), var(--ds-color-flute-8), var(--ds-color-est-ipw), var(--ds-color-flute-5), var(--ds-color-flute-10));
+  --ds-gradient-real-data: linear-gradient(90deg, var(--ds-color-flute-7), var(--ds-color-flute-6), var(--ds-color-yellow), var(--ds-color-orange), var(--ds-color-flute-10), var(--ds-color-flute-8));
+  --ds-gradient-team: linear-gradient(90deg, var(--ds-color-flute-11), var(--ds-color-flute-6), var(--ds-color-green), var(--ds-color-teal), var(--ds-color-flute-3), var(--ds-color-flute-5));
+
   /* ---------- Color: estimators (always paired with a marker shape) ---------- */
   --ds-color-est-naive: #ef4444;
   --ds-color-est-replay: #f59e0b;

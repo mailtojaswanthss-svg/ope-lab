@@ -1,5 +1,6 @@
 import { FlaskConical, Moon, Sun } from 'lucide-react'
 import Button, { IconButton } from '../ui/Button'
+import FlutedGlass from '../ui/FlutedGlass'
 import { cn } from '../ui/cn'
 import { useTheme } from '../ui/theme'
 import { useNav } from './nav'
@@ -13,9 +14,9 @@ export default function TopBar() {
     <header className="sticky top-0 z-40 border-b-thin border-line bg-canvas/80 backdrop-blur-lg">
       <div className="mx-auto flex h-16 max-w-content items-center gap-lg px-lg md:px-xl">
         <button type="button" onClick={() => go('home')} className="flex cursor-pointer items-center gap-sm rounded-md" aria-label="OPE Lab home">
-          <span className="flex size-9 items-center justify-center rounded-lg bg-linear-to-br from-primary to-pink text-on-primary shadow-glow">
+          <FlutedGlass as="span" size="sm" scrim="none" className="flex size-9 items-center justify-center rounded-lg shadow-md">
             <FlaskConical size={18} aria-hidden />
-          </span>
+          </FlutedGlass>
           <span className="font-display text-h3 font-bold text-fg">OPE Lab</span>
         </button>
 

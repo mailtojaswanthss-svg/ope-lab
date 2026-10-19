@@ -128,6 +128,23 @@
   --color-insight: var(--ds-color-insight);
   --color-insight-ink: var(--ds-color-insight-ink);
 
+  --color-flute-1: var(--ds-color-flute-1);
+  --color-flute-2: var(--ds-color-flute-2);
+  --color-flute-3: var(--ds-color-flute-3);
+  --color-flute-4: var(--ds-color-flute-4);
+  --color-flute-5: var(--ds-color-flute-5);
+  --color-flute-6: var(--ds-color-flute-6);
+  --color-flute-7: var(--ds-color-flute-7);
+  --color-flute-8: var(--ds-color-flute-8);
+  --color-flute-9: var(--ds-color-flute-9);
+  --color-flute-10: var(--ds-color-flute-10);
+  --color-flute-11: var(--ds-color-flute-11);
+  --color-on-flute: var(--ds-color-on-flute);
+  --color-on-flute-muted: var(--ds-color-on-flute-muted);
+  --color-glass: var(--ds-color-glass);
+  --color-glass-strong: var(--ds-color-glass-strong);
+  --color-glass-line: var(--ds-color-glass-line);
+
   --color-est-naive: var(--ds-color-est-naive);
   --color-est-replay: var(--ds-color-est-replay);
   --color-est-dm: var(--ds-color-est-dm);
@@ -190,6 +207,23 @@
     transform: scaleX(0);
   }
 }
+@keyframes ds-flute-drift {
+  to {
+    transform: translateX(-20%);
+  }
+}
+
+/* Pointer-following light on fluted glass (animatable custom properties). */
+@property --flute-x {
+  syntax: '<percentage>';
+  inherits: true;
+  initial-value: 28%;
+}
+@property --flute-y {
+  syntax: '<percentage>';
+  inherits: true;
+  initial-value: 18%;
+}
 
 /* Shared transition + border utilities driven by tokens. */
 @utility transition-ds {
@@ -221,6 +255,9 @@
   outline-style: solid;
   outline-width: var(--ds-border-thick);
   outline-offset: var(--ds-border-thick);
+}
+@utility ds-text-glow {
+  text-shadow: var(--ds-shadow-text-flute);
 }
 
 @layer base {
@@ -277,6 +314,85 @@
   .ds-fade-late {
     opacity: 0;
     animation: ds-fade 0.8s ease-out 2.2s forwards;
+  }
+
+  /*
+   * Fluted glass: a drifting color spectrum seen through vertical glass ribs.
+   * Palette, rib width, highlight, shade and scrim all come from global.css.
+   */
+  .ds-fluted {
+    --flute-gradient: var(--ds-gradient-home);
+    --flute-scrim: radial-gradient(ellipse 70% 62% at 50% 50%, var(--ds-flute-scrim), transparent 78%);
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background-color: var(--ds-color-flute-5);
+    color: var(--ds-color-on-flute);
+    transition:
+      --flute-x var(--ds-duration-slow) var(--ds-ease-out),
+      --flute-y var(--ds-duration-slow) var(--ds-ease-out);
+  }
+  .ds-fluted::before,
+  .ds-fluted::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .ds-fluted::before {
+    z-index: -2;
+    background-image: var(--flute-gradient);
+  }
+  /* Drift slides an oversized spectrum layer with transform only (no repaints). */
+  .ds-fluted[data-drift='true']::before {
+    right: auto;
+    width: 125%;
+    animation: ds-flute-drift var(--ds-duration-flute) ease-in-out infinite alternate;
+    will-change: transform;
+  }
+  .ds-fluted::after {
+    z-index: -1;
+    background-image:
+      radial-gradient(circle at var(--flute-x) var(--flute-y), var(--ds-flute-glow), transparent 42%),
+      repeating-linear-gradient(
+        90deg,
+        var(--ds-flute-highlight) 0,
+        transparent calc(var(--ds-flute-width) * 0.4),
+        transparent calc(var(--ds-flute-width) * 0.62),
+        var(--ds-flute-shade) var(--ds-flute-width)
+      ),
+      var(--flute-scrim);
+  }
+  .ds-fluted[data-size='sm'] {
+    --ds-flute-width: var(--ds-flute-width-sm);
+  }
+  .ds-fluted[data-scrim='start'] {
+    --flute-scrim: linear-gradient(90deg, var(--ds-flute-scrim-strong), transparent 82%);
+  }
+  .ds-fluted[data-scrim='none'] {
+    --flute-scrim: linear-gradient(transparent, transparent);
+  }
+  .ds-fluted[data-palette='story'] {
+    --flute-gradient: var(--ds-gradient-story);
+  }
+  .ds-fluted[data-palette='estimators'] {
+    --flute-gradient: var(--ds-gradient-estimators);
+  }
+  .ds-fluted[data-palette='lab'] {
+    --flute-gradient: var(--ds-gradient-lab);
+  }
+  .ds-fluted[data-palette='studies'] {
+    --flute-gradient: var(--ds-gradient-studies);
+  }
+  .ds-fluted[data-palette='real-data'] {
+    --flute-gradient: var(--ds-gradient-real-data);
+  }
+  .ds-fluted[data-palette='team'] {
+    --flute-gradient: var(--ds-gradient-team);
+  }
+  /* Solid: the element's own bg-* utility shows through the ribs. */
+  .ds-fluted[data-palette='solid'] {
+    --flute-gradient: none;
   }
 }
 

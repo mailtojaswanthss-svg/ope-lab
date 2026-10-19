@@ -6,6 +6,7 @@ import Badge from '../ui/Badge'
 import Button from '../ui/Button'
 import Card, { CardTitle } from '../ui/Card'
 import Disclosure from '../ui/Disclosure'
+import FlutedGlass from '../ui/FlutedGlass'
 import { cn } from '../ui/cn'
 import Insight from '../app/Insight'
 import PageHeader from '../app/PageHeader'
@@ -185,6 +186,39 @@ function GroundTruth() {
   )
 }
 
+const GLOSSARY = [
+  { term: 'Policy', def: 'A rule that decides what each customer gets, such as “coupon” or “no coupon”.', c: 'bg-blue' },
+  { term: 'Logged data', def: 'What the old policy chose, for whom, and what happened next. All an estimator gets to see.', c: 'bg-flute-6' },
+  { term: 'Counterfactual', def: 'The outcome that would have happened under a different choice, which is never observed.', c: 'bg-pink' },
+  { term: 'Propensity', def: 'How likely the old policy was to make a given choice for a given customer: p(A | X).', c: 'bg-est-ipw' },
+  { term: 'Confounder', def: 'A trait that affects both who gets treated and the outcome. If it’s hidden, it’s U.', c: 'bg-flute-10' },
+  { term: 'Overlap', def: 'Every kind of customer had some chance of every choice. Without it, there is nothing to learn from.', c: 'bg-flute-3' },
+  { term: 'Importance weight', def: '1 / propensity. It makes rare choices count more so the logs look like the new policy.', c: 'bg-orange' },
+  { term: 'Ground truth V*', def: 'The new policy’s real value. Only knowable in a simulation, which is why OPE Lab uses one.', c: 'bg-insight' },
+]
+
+function Glossary() {
+  return (
+    <section aria-labelledby="glossary-title" className="flex flex-col gap-xl border-t-thin border-line pt-2xl">
+      <div className="flex flex-col gap-xs">
+        <p id="glossary-title" role="heading" aria-level={2} className="font-display text-h2 font-semibold text-fg">
+          Words you’ll meet
+        </p>
+        <p className="text-body text-fg-muted">Eight terms that come up across the Lab and Studies.</p>
+      </div>
+      <dl className="ds-stagger grid gap-md sm:grid-cols-2 lg:grid-cols-4">
+        {GLOSSARY.map((g, i) => (
+          <div key={g.term} style={{ '--i': i } as CSSProperties} className="group relative flex flex-col gap-xs overflow-hidden rounded-xl border-thin border-line bg-surface p-lg pl-xl shadow-sm transition-ds hover:-translate-y-0.5 hover:shadow-md">
+            <FlutedGlass as="span" aria-hidden palette="solid" size="sm" scrim="none" className={cn('absolute inset-y-0 left-0 w-1.5 transition-ds group-hover:w-2.5', g.c)} />
+            <dt className="text-body font-semibold text-fg">{g.term}</dt>
+            <dd className="text-small text-fg-muted">{g.def}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  )
+}
+
 export default function Story() {
   const { go } = useNav()
   const [step, setStep] = useState(0)
@@ -244,6 +278,7 @@ export default function Story() {
           </Button>
         )}
       </div>
+      <Glossary />
     </div>
   )
 }

@@ -148,8 +148,11 @@ export default function Studies() {
     <div className="flex flex-col gap-2xl">
       <PageHeader tab="studies" eyebrow="Stress tests" title="Push the estimators until they break" lead="Three experiments, one at a time. Each one uses the world you set up in the Lab.">
         <div className="flex flex-wrap items-center gap-md">
-          <Badge label={`Lab world: bias ${sim.confounding.toFixed(2)} · overlap ${sim.overlap.toFixed(2)}`} tone="pink" dot />
-          <Button variant="ghost" size="sm" onClick={() => go('lab')} iconEnd={<ArrowRight size={16} />}>
+          <span className="inline-flex items-center gap-xs rounded-full border-thin border-glass-line bg-glass px-md py-2xs text-caption font-semibold text-on-flute backdrop-blur-md">
+            <span aria-hidden className="size-1.5 rounded-full bg-on-flute" />
+            Lab world: bias {sim.confounding.toFixed(2)} · overlap {sim.overlap.toFixed(2)}
+          </span>
+          <Button variant="glass" size="sm" onClick={() => go('lab')} iconEnd={<ArrowRight size={16} />}>
             Change it
           </Button>
         </div>
