@@ -24,12 +24,12 @@ from ope.estimators import EstimatorSummary, compute_all_estimators
 from ope.simulator import TRUE_INTERVENTIONAL_VALUE, Dataset, simulate_dgp
 from ui.charts import create_estimator_ci_chart, create_weight_distribution_chart
 from ui.components import (
-    render_calculator_headline_card,
-    render_calculator_stat_cards,
+    render_dark_green_results_card,
     render_footer,
     render_header,
     render_insight_banner,
     render_overview_tab,
+    render_ribbed_hero_banner,
 )
 from ui.theme import inject_theme
 
@@ -159,8 +159,9 @@ def main() -> None:
             unsafe_allow_html=True,
         )
 
-    # Top Brand Header
+    # Top Brand Header & Full-Width Ribbed-Glass Gradient Hero Banner
     render_header()
+    render_ribbed_hero_banner()
 
     # Query params handling for testing and headless screenshot automation
     q_preset = st.query_params.get("preset")
@@ -197,12 +198,10 @@ def main() -> None:
         render_overview_tab()
 
     with tab_results:
-        # Calculator-style layout: Left controls panel, Right large results display
+        # Visual Match Layout: Left controls column (NO CARD), Right dark green card
         col_ctrl, col_display = st.columns([4.2, 7.8], gap="large")
 
-        with col_ctrl, st.container(border=True):
-            st.markdown("### 🎛️ Calculator Controls")
-
+        with col_ctrl:
             # Pill-style preset row
             st.caption("Benchmark Presets")
             p_cols = st.columns(3)
@@ -216,9 +215,19 @@ def main() -> None:
                 apply_preset("Hidden Confounder (Trap)")
                 st.rerun()
 
-            st.caption(f"Selected: **{st.session_state.preset_name}**")
-            st.markdown("---")
+            st.caption(f"Active Scenario: **{st.session_state.preset_name}**")
 
+            # Confounding Strength (26px label, #f0f1f7 input box with number & unit, grey-purple slider)
+            st.markdown(
+                f"""
+                <div class="left-controls-label">Confounding Strength</div>
+                <div class="custom-param-box">
+                    <span class="param-val">{st.session_state.confounding:.2f}</span>
+                    <span class="param-unit">c (hidden weight)</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
             confounding = st.slider(
                 "Confounding Strength (c)",
                 min_value=0.0,
@@ -226,10 +235,22 @@ def main() -> None:
                 value=float(st.session_state.confounding),
                 step=0.05,
                 key="slider_confounding",
+                label_visibility="collapsed",
                 help="Hidden confounder U shifts logging policy and treatment effect; estimators cannot observe U.",
             )
             st.session_state.confounding = confounding
 
+            # Overlap Level (26px label, #f0f1f7 input box with number & unit, grey-purple slider)
+            st.markdown(
+                f"""
+                <div class="left-controls-label">Overlap Level</div>
+                <div class="custom-param-box">
+                    <span class="param-val">{st.session_state.overlap:.2f}</span>
+                    <span class="param-unit">α (propensity overlap)</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
             overlap = st.slider(
                 "Overlap Level (α)",
                 min_value=0.05,
@@ -237,10 +258,22 @@ def main() -> None:
                 value=float(st.session_state.overlap),
                 step=0.05,
                 key="slider_overlap",
+                label_visibility="collapsed",
                 help="Controls propensity overlap. Low values force logging policy to be near-deterministic, inflating weights.",
             )
             st.session_state.overlap = overlap
 
+            # Sample Size (26px label, #f0f1f7 input box with number & unit, grey-purple slider)
+            st.markdown(
+                f"""
+                <div class="left-controls-label">Sample Size</div>
+                <div class="custom-param-box">
+                    <span class="param-val">{st.session_state.n_samples:,}</span>
+                    <span class="param-unit">n (logged interactions)</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
             n_samples = st.slider(
                 "Sample Size (n)",
                 min_value=500,
@@ -248,10 +281,22 @@ def main() -> None:
                 value=int(st.session_state.n_samples),
                 step=500,
                 key="slider_n",
+                label_visibility="collapsed",
                 help="Number of historical logged interactions (X, A, R) generated from logging policy π₀.",
             )
             st.session_state.n_samples = n_samples
 
+            # Reward Noise (26px label, #f0f1f7 input box with number & unit, grey-purple slider)
+            st.markdown(
+                f"""
+                <div class="left-controls-label">Reward Noise</div>
+                <div class="custom-param-box">
+                    <span class="param-val">{st.session_state.noise:.2f}</span>
+                    <span class="param-unit">σ (std dev)</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
             noise = st.slider(
                 "Reward Noise (σ)",
                 min_value=0.1,
@@ -259,11 +304,18 @@ def main() -> None:
                 value=float(st.session_state.noise),
                 step=0.05,
                 key="slider_noise",
+                label_visibility="collapsed",
                 help="Standard deviation of Gaussian noise added to the reward outcome.",
             )
             st.session_state.noise = noise
 
-            st.markdown("---")
+            # Random Seed
+            st.markdown(
+                """
+                <div class="left-controls-label">Inference Controls</div>
+                """,
+                unsafe_allow_html=True,
+            )
             c_seed, c_btn = st.columns([2, 1])
             with c_seed:
                 seed_val = st.number_input(
@@ -316,24 +368,17 @@ def main() -> None:
             naive_res = boot_summary.get("Naive")
             dr_res = boot_summary.get("Doubly Robust")
 
-            # 1. Large Result Card: Big headline number (error of Naive vs truth) in glowing type
-            render_calculator_headline_card(
+            # 1. Dark Green Card (#024526, 16px radius, 32px padding, huge white number, 3 mini cards, 16px bars)
+            render_dark_green_results_card(
                 naive_val=naive_res.point_estimate,
-                true_val=TRUE_INTERVENTIONAL_VALUE,
-                naive_ci=(naive_res.ci_lower, naive_res.ci_upper),
-            )
-
-            # 2. Two smaller stat cards beneath it
-            render_calculator_stat_cards(
                 dr_val=dr_res.point_estimate,
                 true_val=TRUE_INTERVENTIONAL_VALUE,
-                dr_ci=(dr_res.ci_lower, dr_res.ci_upper),
                 ess=est_summary.ess,
                 max_weight=est_summary.max_weight,
                 n=dataset.n,
             )
 
-            # 3. Dynamic Key Insight Banner (reserved Orange accent for key causal warnings)
+            # 2. Dynamic Key Insight Banner (reserved Orange accent for key causal warnings)
             render_insight_banner(
                 confounding=st.session_state.confounding,
                 overlap=st.session_state.overlap,

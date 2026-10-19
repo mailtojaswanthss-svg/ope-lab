@@ -36,6 +36,27 @@ def render_header() -> None:
     )
 
 
+def render_ribbed_hero_banner() -> None:
+    """Renders the full-width banner with vertical ribbed-glass gradient.
+
+    90deg linear gradient (#dfe0f7, #2f9be0, #0a86d4, #0c7a4c, #f06ab8, #f472b6, #0b5a2b)
+    with repeating 28px vertical stripe overlay (rgba(255,255,255,.3) to transparent to rgba(0,0,0,.2)).
+    Title "Off-Policy Evaluation Lab" in white DM Sans, weight 500, up to 104px, letter spacing -0.035em, centered,
+    with a 26px subtitle underneath.
+    """
+    st.markdown(
+        """
+        <div class="hero-ribbed-banner">
+            <h1 class="hero-ribbed-title">Off-Policy Evaluation Lab</h1>
+            <p class="hero-ribbed-subtitle">
+                Did the policy actually work, or did it just look like it did?
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def render_overview_hero() -> None:
     """Renders the Hero section at the top of the Overview tab with animated gradient mesh."""
     st.markdown(
@@ -143,6 +164,79 @@ def render_calculator_stat_cards(
             """,
             unsafe_allow_html=True,
         )
+
+
+def render_dark_green_results_card(
+    naive_val: float,
+    dr_val: float,
+    true_val: float,
+    ess: float,
+    max_weight: float,
+    n: int,
+) -> None:
+    """Renders the right-column dark green card (#024526, 16px radius, 32px padding).
+
+    Contains:
+    - 25px heading: "Policy Value & Selection Bias"
+    - Huge white number (weight 800): showing Naive bias vs target
+    - Three darker mini cards (#032817) with uppercase white labels and values in:
+      * Sky (#38bdf8): Doubly Robust estimate
+      * Pink (#ff6dbe): Naive observation
+      * Amber (#fbbf24): Kish Effective Sample Size
+    - Thin 16px bars in pink and amber:
+      * Pink bar (#ff6dbe): Selection error share
+      * Amber bar (#fbbf24): Effective sample size retention
+    """
+    naive_bias = naive_val - true_val
+    sign = "+" if naive_bias >= 0 else ""
+    ess_ratio = ess / n if n > 0 else 0.0
+
+    # Thin bar proportions (clamped between 2% and 100% for display)
+    bias_pct = min(100.0, max(4.0, (abs(naive_bias) / true_val) * 100.0 if true_val > 0 else 0.0))
+    ess_pct = min(100.0, max(2.0, ess_ratio * 100.0))
+
+    card_html = (
+        f'<div class="dark-green-card">'
+        f'<div class="green-card-heading">Policy Value &amp; Selection Bias</div>'
+        f'<div class="huge-white-number">{sign}{naive_bias:.4f}</div>'
+        f'<div class="green-card-desc">'
+        f'Naive raw log estimate: <b>{naive_val:.4f}</b> vs True Interventional Target <b>{true_val:.4f}</b>. '
+        f'Off-policy estimators correct for propensity skew and confounding.'
+        f'</div>'
+        f'<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 22px;">'
+        f'<div class="mini-card-dark">'
+        f'<div class="mini-card-label">DOUBLY ROBUST (DR)</div>'
+        f'<div class="mini-card-val-sky">{dr_val:.4f}</div>'
+        f'<div class="mini-card-sub">Error vs target: {abs(dr_val - true_val):.4f}</div>'
+        f'</div>'
+        f'<div class="mini-card-dark">'
+        f'<div class="mini-card-label">NAIVE OBSERVATION</div>'
+        f'<div class="mini-card-val-pink">{naive_val:.4f}</div>'
+        f'<div class="mini-card-sub">Bias: {sign}{naive_bias:.4f}</div>'
+        f'</div>'
+        f'<div class="mini-card-dark">'
+        f'<div class="mini-card-label">KISH EFFECTIVE SAMPLE</div>'
+        f'<div class="mini-card-val-amber">{ess:,.0f}</div>'
+        f'<div class="mini-card-sub">{ess_ratio:.1%} retention • Max W: {max_weight:.1f}</div>'
+        f'</div>'
+        f'</div>'
+        f'<div class="thin-bar-label">'
+        f'<span>Selection Error Share (Naive vs True Target)</span>'
+        f'<span>{bias_pct:.1f}%</span>'
+        f'</div>'
+        f'<div class="thin-bar-container">'
+        f'<div class="thin-bar-pink" style="width: {bias_pct:.1f}%;"></div>'
+        f'</div>'
+        f'<div class="thin-bar-label">'
+        f'<span>Effective Sample Size Retention (Overlap Health)</span>'
+        f'<span>{ess_pct:.1f}%</span>'
+        f'</div>'
+        f'<div class="thin-bar-container">'
+        f'<div class="thin-bar-amber" style="width: {ess_pct:.1f}%;"></div>'
+        f'</div>'
+        f'</div>'
+    )
+    st.markdown(card_html, unsafe_allow_html=True)
 
 
 def render_insight_banner(
