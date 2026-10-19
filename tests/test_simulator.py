@@ -21,7 +21,7 @@ def test_interventional_ground_truth_monte_carlo():
 
     # Interventional structural equation:
     # R = 0.5 + 0.3X + A*(0.2 + 0.2X) + 0.4U + eps
-    r_interventional = 0.5 + 0.3 * x + a_target * (0.2 + 0.2 * x) + 0.4 * u + eps
+    r_interventional = 0.5 + 0.3 * x + a_target * (0.2 + 0.2 * x + 0.5 * u) + 0.4 * u + eps
     mc_estimate = float(np.mean(r_interventional))
 
     # Analytical value: 0.5 + 0.1 + 0.2 * 0.398942 = 0.679788

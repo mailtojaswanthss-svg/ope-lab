@@ -3,6 +3,26 @@
 Simulates contextual bandit environments with controllable unobserved confounding,
 overlap, and reward noise. Ground truth is known analytically as the interventional
 value of the new policy.
+
+Causal Formulation:
+- Observed context: X ~ N(0, 1)
+- Unobserved confounder: U ~ N(0, 1)
+- Logging policy: P(A=1 | X, U) = sigmoid(L*X + 3*c*U)
+  where L = 0.5 + 5*(1 - overlap) controls positivity.
+- Structural Reward Equation:
+  R = 0.5 + 0.3*X + A*(0.2 + 0.2*X + 0.5*U) + 0.4*U + noise*N(0, 1)
+
+Why this breaks unadjusted estimators under hidden confounding:
+In earlier specifications where U only entered additively (+ 0.4*U), the bias
+induced by U on treated rows (A=1) and control rows (A=0) cancelled out symmetrically
+around X = 0 under the target policy (treat when X > 0). By allowing U to also modify
+the treatment effect (A * 0.5*U), units that the logging policy selectively chooses to
+treat have E[U | A=1] > 0. Because estimators only observe X and never U, propensity
+and regression models cannot adjust for U, creating genuine omitted variable bias.
+
+Under the causal intervention do(A = pi_e(X)), A is independent of U given X,
+and since E[U] = 0, E[A * 0.5*U] = 0. Hence the true interventional value remains:
+V*(pi_e) = 0.5 + 0.1 + 0.2 * 0.398942 = 0.679788.
 """
 
 from __future__ import annotations
@@ -15,7 +35,8 @@ import numpy as np
 from ope.logging_config import logger
 
 # Analytical Interventional Ground Truth Value of Target Policy pi_e:
-# E[R | do(A = pi_e(X))] = 0.5 + 0.3*E[X] + 0.2*E[1_{X>0}] + 0.2*E[X*1_{X>0}] + 0.4*E[U]
+# E[R | do(A = pi_e(X))] = 0.5 + 0.3*E[X] + 0.2*E[1_{X>0}] + 0.2*E[X*1_{X>0}] + 0.5*E[1_{X>0}*U] + 0.4*E[U]
+# Since U is independent of X with E[U]=0: E[1_{X>0}*U] = E[1_{X>0}]*E[U] = 0.
 # For X ~ N(0,1), E[X]=0, E[1_{X>0}]=0.5, and E[X*1_{X>0}] = 1/sqrt(2*pi) ~ 0.39894228
 # V*(pi_e) = 0.5 + 0.1 + 0.2 * 0.398942 = 0.679788
 TRUE_INTERVENTIONAL_VALUE: float = 0.5 + 0.1 + 0.2 * (1.0 / math.sqrt(2.0 * math.pi))
@@ -113,9 +134,9 @@ def simulate_dgp(
     # 3. Logged action sampled from behavior policy
     a = (rng.uniform(size=n) < pi_0_prob).astype(int)
 
-    # 4. Observed reward from structural equation + confounding + noise
+    # 4. Observed reward from structural equation + treatment effect modification + confounding + noise
     reward_noise = rng.normal(loc=0.0, scale=noise, size=n)
-    r = 0.5 + 0.3 * x + a * (0.2 + 0.2 * x) + 0.4 * u + reward_noise
+    r = 0.5 + 0.3 * x + a * (0.2 + 0.2 * x + 0.5 * u) + 0.4 * u + reward_noise
 
     # 5. Target policy actions (only sees x)
     pi_e_act = target_policy(x)
