@@ -50,9 +50,10 @@ In observational data, correlation is not causation. Customers who received the 
 4. **Quantifies Uncertainty with Bootstrap:**
    - Computes 95% Confidence Intervals and standard errors using an adaptive percentile bootstrap.
 
-5. **Marginal Sensitivity Analysis:**
-   - Computes worst-case reward bounds under potential unobserved confounding using the sorted-reward threshold sweep over $[w/\Lambda, w \cdot \Lambda]$.
-   - Calculates **$\Lambda^*$**: The minimum unobserved confounding required to explain away the policy's estimated value.
+5. **Marginal Sensitivity Analysis (Confounding Robustness):**
+   - Implements a basic approximation of the marginal sensitivity model (MSM) on SNIPW over matched rows.
+   - Computes worst-case policy value lower and upper bounds across odds ratio bounds $\Lambda \in [1.0, 3.0]$ using an $O(n \log n)$ prefix-sum sorted-reward optimization.
+   - Identifies **$\Lambda^*$**: The minimum odds ratio distortion required to cover or explain away the policy's estimated value.
 
 6. **Failure Study (Empirical Monte Carlo Sweeps):**
    - **Chart A (Confounding Sweep):** Evaluates all 6 estimators as hidden confounding $c$ scales from 0.0 to 1.0 (30 seeds/level, $n=5,000$). Features an interactive toggle between Absolute Bias and RMSE, a 0.05 tolerance threshold line, and real-time plain-English takeaways.
@@ -65,7 +66,11 @@ In observational data, correlation is not causation. Customers who received the 
    - **Mandatory Honesty Rule:** When the lowest-RMSE estimator has $|Bias| > 0.05$, the cell is marked **"No method reliable"** (muted slate) — upholding causal integrity because hidden confounding invalidates unadjusted OPE methods.
    - **Cell Inspector:** Interactive dropdown to inspect exact Mean, Bias, Abs Bias, Variance, Std Error, and RMSE across all 6 estimators for any parameter combination.
 
-8. **Automated Evidence & Facts Generator:**
+8. **Real-World Benchmark: Open Bandit Dataset (ZOZOTOWN):**
+   - Evaluates off-policy estimators against live on-policy click-through rate (CTR) on large-scale e-commerce recommendations (12M interactions, 80 items).
+   - Provides honest reference metrics from the published benchmark (Saito et al., NeurIPS 2020) and a seamless fallback card with zero fabricated numbers.
+
+9. **Automated Evidence & Facts Generator:**
    - Standalone CLI pipeline (`scripts/make_abstract_facts.py`) executing multi-seed Monte Carlo benchmarks and adaptive bootstrap inference. Outputs exact, verifiable empirical numbers directly to `docs/abstract_facts.md` (no fabricated data).
 
 ---
@@ -137,6 +142,7 @@ Estimators **never observe $U$**, reflecting the real-world challenge where unme
 - **Data & Tables:** Pandas
 - **Visualization:** Plotly (interactive SVG/WebGL with custom templates), Kaleido (PNG export)
 - **Web Interface:** Streamlit (with caching via `st.cache_data` and session state)
+- **Frontend App:** Standalone React 19 + Vite 8 + Tailwind CSS v4 in `D:\projects\OPE LAB frontend`
 - **Code Quality:** Ruff (zero lint errors), Pytest (100% test pass rate)
 
 ---
@@ -160,7 +166,7 @@ source .venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Launch OPE Lab
+# Launch OPE Lab (Streamlit Backend App)
 streamlit run app.py
 ```
 Open your browser at `http://localhost:8501`.
@@ -184,15 +190,12 @@ Open your browser at `http://localhost:8501`.
    - Click the sidebar button **`Trap`** ($c=0.8, \text{overlap}=0.7$).
    - Show the prominent orange **⚠️ Unobserved Confounding Active** banner:
      *"Doubly Robust protects against model misspecification under unconfoundedness, but CANNOT fix hidden confounding."*
-   - Show that all estimators exhibit positive bias, proving why sensitivity bounds are mandatory before deployment.
-5. **Step 5: Failure Study Sweeps (15s)**
-   - Switch to the **💥 Failure Study** tab.
-   - Toggle between **Absolute Bias** and **RMSE** to show how error scales with hidden confounding $c$.
-   - Highlight the 0.05 red tolerance threshold line and the dynamic takeaway explaining which estimators fail first.
-6. **Step 6: Estimator Decision Map (15s)**
-   - Switch to the **🗺️ Decision Map** tab.
-   - Point to the 3×3 phase matrix: show where **Doubly Robust / SNIPW** win, where **Ties** occur, and the gray **"No Method Reliable"** zone where hidden confounding exceeds tolerance.
-   - Use the **Cell Inspector** dropdowns to view exact empirical metrics across all 6 estimators.
+5. **Step 5: Failure Study & Decision Map (15s)**
+   - Switch to the **💥 Failure Study** and **🗺️ Decision Map** tabs.
+   - Show the 0.05 error breakdown threshold and the gray **"No Method Reliable"** honesty zone.
+6. **Step 6: Sensitivity Bounds & Real Data (15s)**
+   - Switch to the **🛡️ Sensitivity** tab to show the Marginal Sensitivity Model bounds and the **$\Lambda^*$** breakdown threshold.
+   - Switch to the **📁 Real Data** tab to show real-world ZOZOTOWN benchmark validation.
 
 ---
 

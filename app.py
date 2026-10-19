@@ -28,12 +28,14 @@ from ope.analysis import (
 )
 from ope.bootstrap import BootstrapSummary, run_bootstrap_ci
 from ope.estimators import EstimatorSummary, compute_all_estimators
+from ope.sensitivity import SensitivityResult, compute_sensitivity_bounds
 from ope.simulator import TRUE_INTERVENTIONAL_VALUE, Dataset, simulate_dgp
 from ui.charts import (
     create_confounding_sweep_chart,
     create_decision_map_grid_chart,
     create_estimator_ci_chart,
     create_overlap_sweep_chart,
+    create_sensitivity_bounds_chart,
     create_weight_distribution_chart,
 )
 from ui.components import (
@@ -45,7 +47,9 @@ from ui.components import (
     render_header,
     render_insight_banner,
     render_overview_tab,
+    render_realdata_card,
     render_ribbed_hero_banner,
+    render_sensitivity_summary,
 )
 from ui.theme import inject_theme
 
@@ -138,6 +142,21 @@ def run_cached_decision_map(
         noise=noise,
         base_seed=base_seed,
     )
+
+
+@st.cache_data(show_spinner=False)
+def run_cached_sensitivity(
+    n: int,
+    confounding: float,
+    overlap: float,
+    noise: float,
+    seed: int,
+    max_lambda: float = 3.0,
+) -> SensitivityResult:
+    """Caches marginal sensitivity bounds computation."""
+    dataset = simulate_dgp(n=n, confounding=confounding, overlap=overlap, noise=noise, seed=seed)
+    lambdas = np.linspace(1.0, max_lambda, 41)
+    return compute_sensitivity_bounds(dataset, lambdas=lambdas)
 
 
 def initialize_session_state() -> None:
@@ -273,6 +292,24 @@ def main() -> None:
             "💥 Failure Study",
             "🛡️ Sensitivity",
             "📁 Real Data",
+        ])
+    elif q_tab == "sensitivity":
+        tab_sensitivity, tab_overview, tab_results, tab_failure, tab_decision, tab_realdata = st.tabs([
+            "🛡️ Sensitivity",
+            "📖 Overview",
+            "📊 Results",
+            "💥 Failure Study",
+            "🗺️ Decision Map",
+            "📁 Real Data",
+        ])
+    elif q_tab == "realdata":
+        tab_realdata, tab_overview, tab_results, tab_failure, tab_decision, tab_sensitivity = st.tabs([
+            "📁 Real Data",
+            "📖 Overview",
+            "📊 Results",
+            "💥 Failure Study",
+            "🗺️ Decision Map",
+            "🛡️ Sensitivity",
         ])
     else:
         tab_overview, tab_results, tab_failure, tab_decision, tab_sensitivity, tab_realdata = st.tabs([
@@ -677,19 +714,51 @@ def main() -> None:
         st.dataframe(pd.DataFrame(cell_rows), use_container_width=True, hide_index=True)
 
     with tab_sensitivity:
-        st.markdown("### 🛡️ Confounding Sensitivity Bounds (Rosenbaum Γ)")
-        st.info(
-            "🛡️ **Under Construction (Step 6)**: This tab will quantify policy robustness against hidden "
-            "confounders by computing marginal sensitivity bounds across odds ratios $\\Lambda \\in [1.0, 3.0]$."
+        st.markdown("### 🛡️ Confounding Sensitivity Bounds (Marginal Sensitivity Model)")
+        st.caption(
+            "Quantifies how resilient the policy estimate is against potential unobserved confounding $U$. "
+            "Under the marginal sensitivity model, an unmeasured confounder may shift the odds of treatment selection "
+            "by at most an odds ratio $\\Lambda \\ge 1.0$. The shaded band shows worst-case bounds on the true policy value."
         )
+
+        col_s1, _ = st.columns([3, 7])
+        with col_s1:
+            max_lam = st.slider(
+                "Max Odds Ratio Bound (Λ)",
+                min_value=1.5,
+                max_value=4.0,
+                value=3.0,
+                step=0.25,
+                key="slider_max_lambda",
+                help="Maximum odds ratio distortion by which an unobserved confounder could sway treatment decisions.",
+            )
+
+        with st.spinner("Computing worst-case sensitivity bounds across sorted-reward prefix sums..."):
+            prog_s = st.progress(0, text="Calculating worst-case bounds across odds ratios...")
+            sens_res = run_cached_sensitivity(
+                n=st.session_state.n_samples,
+                confounding=st.session_state.confounding,
+                overlap=st.session_state.overlap,
+                noise=st.session_state.noise,
+                seed=st.session_state.seed,
+                max_lambda=float(max_lam),
+            )
+            prog_s.progress(100, text="Sensitivity bounds complete!")
+            time.sleep(0.02)
+            prog_s.empty()
+
+        render_sensitivity_summary(sens_res)
+        fig_sens = create_sensitivity_bounds_chart(sens_res, is_dark=st.session_state.is_dark)
+        st.plotly_chart(fig_sens, use_container_width=True)
 
     with tab_realdata:
         st.markdown("### 📁 Real-World Benchmark: Open Bandit Dataset")
-        st.warning(
-            "📦 **Open Bandit Pipeline (OBP) Fallback Card**: `obp` is not active in this environment. "
-            "In Step 8, this tab will provide precomputed ZOZOTOWN benchmark metrics and offline policy "
-            "comparisons without synthetic artifacts."
+        st.caption(
+            "Validation on large-scale real-world e-commerce recommendations (ZOZOTOWN). "
+            "Examines how well off-policy estimators predict live on-policy click-through rate (CTR) "
+            "under production distribution shift."
         )
+        render_realdata_card()
 
     render_footer()
 

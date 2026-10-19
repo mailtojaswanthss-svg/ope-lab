@@ -75,6 +75,10 @@ def main():
             ("http://localhost:8501/?tab=failure&theme=light", OUTPUT_DIR / "failure_study_light.png", 6.0),
             ("http://localhost:8501/?tab=decision", OUTPUT_DIR / "decision_map.png", 6.0),
             ("http://localhost:8501/?tab=decision&theme=light", OUTPUT_DIR / "decision_map_light.png", 6.0),
+            ("http://localhost:8501/?tab=sensitivity", OUTPUT_DIR / "sensitivity_bounds.png", 4.0),
+            ("http://localhost:8501/?tab=sensitivity&theme=light", OUTPUT_DIR / "sensitivity_bounds_light.png", 4.0),
+            ("http://localhost:8501/?tab=realdata", OUTPUT_DIR / "real_data.png", 3.0),
+            ("http://localhost:8501/?tab=realdata&theme=light", OUTPUT_DIR / "real_data_light.png", 3.0),
         ]
 
         for url, path, wait_time in targets:

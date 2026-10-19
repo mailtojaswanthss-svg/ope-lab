@@ -16,6 +16,12 @@ from __future__ import annotations
 import streamlit as st
 
 from ope.analysis import DecisionMapResult, SweepResult
+from ope.realdata import (
+    ZOZOTOWN_ALL_META,
+    get_reference_zozotown_benchmark,
+    is_obp_available,
+)
+from ope.sensitivity import SensitivityResult
 
 
 def render_header() -> None:
@@ -478,6 +484,111 @@ def render_decision_map_summary(decision_map: DecisionMapResult) -> None:
         f'</div>'
     )
     st.markdown(badge_html, unsafe_allow_html=True)
+
+
+def render_sensitivity_summary(sens_res: SensitivityResult) -> None:
+    """Renders prominent summary callout for the marginal sensitivity analysis."""
+    if sens_res.lambda_star is not None:
+        if sens_res.covers_at_one:
+            badge_title = "🛡️ Nominal Coverage Confirmed (Λ* = 1.00)"
+            box_style = "border-left: 4px solid #10b981; background: rgba(16, 185, 129, 0.08);"
+            body_text = (
+                f"Even under zero unobserved confounding (odds ratio bound <code>Λ = 1.00</code>), "
+                f"the SNIPW estimate (<code>{sens_res.point_estimate:.4f}</code>) already encompasses the true "
+                f"interventional target (<code>0.6798</code>). The policy's value cannot be trivially explained "
+                f"away by mild selection bias."
+            )
+        else:
+            pct_distortion = (sens_res.lambda_star - 1.0) * 100.0
+            badge_title = f"🛡️ Sensitivity Breakdown Threshold: Λ* = {sens_res.lambda_star:.2f}"
+            box_style = "border-left: 4px solid #f97316; background: rgba(249, 115, 22, 0.08);"
+            body_text = (
+                f"An unobserved confounder <code>U</code> would need to distort the odds of treatment selection by at "
+                f"least <b>Λ* = {sens_res.lambda_star:.2f}</b> (a <b>{pct_distortion:.0f}% odds shift</b>) to expand "
+                f"the worst-case policy value bounds enough to cover the true interventional target <code>V* = 0.6798</code>.<br>"
+                f"If domain experts believe unmeasured variables cannot swing treatment odds by {sens_res.lambda_star:.2f}×, "
+                f"the qualitative conclusion of the policy evaluation remains robust."
+            )
+    else:
+        badge_title = "⚠️ High Vulnerability: Λ* > 3.00"
+        box_style = "border-left: 4px solid #ef4444; background: rgba(239, 68, 68, 0.08);"
+        body_text = (
+            f"Even under a severe <code>3.0×</code> odds ratio distortion (<code>Λ = 3.00</code>), the worst-case "
+            f"bounds <code>[{sens_res.lower_bounds[-1]:.4f}, {sens_res.upper_bounds[-1]:.4f}]</code> do NOT cover "
+            f"the true target value <code>0.6798</code>. This indicates extreme observational bias in the current data regime."
+        )
+
+    html = (
+        f'<div class="insight-box" style="{box_style} margin-top: 14px; margin-bottom: 20px;">'
+        f'<div style="font-weight: 750; font-size: 1.05rem; margin-bottom: 8px;">{badge_title}</div>'
+        f'<div style="line-height: 1.5; font-size: 0.92rem;">{body_text}</div>'
+        f'<div style="margin-top: 10px; font-size: 0.8rem; color: #94a3b8;">'
+        f'🏷️ <i>Method: {sens_res.method_label}. Computed over matched rows with prefix-sum sorted-reward optimization.</i>'
+        f'</div>'
+        f'</div>'
+    )
+    st.markdown(html, unsafe_allow_html=True)
+
+
+def render_realdata_card() -> None:
+    """Renders the Open Bandit Dataset real-world benchmark card."""
+    obp_installed = is_obp_available()
+    obp_status_badge = (
+        '<span style="padding: 2px 8px; border-radius: 6px; background: #059669; color: white; font-size: 11px; font-weight: 700;">OBP Active</span>'
+        if obp_installed
+        else '<span style="padding: 2px 8px; border-radius: 6px; background: #475569; color: white; font-size: 11px; font-weight: 700;">OBP Fallback Mode</span>'
+    )
+
+    st.markdown(
+        f"""
+        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 24px; margin-bottom: 24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom: 12px;">
+                <div style="font-size: 1.25rem; font-weight: 700; color: #f8fafc;">
+                    📁 {ZOZOTOWN_ALL_META.campaign_name}
+                </div>
+                <div>{obp_status_badge}</div>
+            </div>
+            <div style="color: #94a3b8; font-size: 0.9rem; line-height: 1.5; margin-bottom: 16px;">
+                Reference dataset collected on Japan's largest fashion e-commerce platform (ZOZOTOWN). 
+                Logs over 12,000,000 user interactions comparing a uniform random logging policy 
+                against an online Bernoulli Thompson Sampling (BTS) evaluation policy.
+            </div>
+            <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px;">
+                <div style="background: rgba(255, 255, 255, 0.05); padding: 8px 14px; border-radius: 8px; font-size: 0.82rem;">
+                    <b>Actions (Items):</b> {ZOZOTOWN_ALL_META.num_actions} items
+                </div>
+                <div style="background: rgba(255, 255, 255, 0.05); padding: 8px 14px; border-radius: 8px; font-size: 0.82rem;">
+                    <b>Context Features:</b> {ZOZOTOWN_ALL_META.context_dim} dimensions
+                </div>
+                <div style="background: rgba(255, 255, 255, 0.05); padding: 8px 14px; border-radius: 8px; font-size: 0.82rem;">
+                    <b>Reward:</b> {ZOZOTOWN_ALL_META.reward_metric}
+                </div>
+                <div style="background: rgba(255, 255, 255, 0.05); padding: 8px 14px; border-radius: 8px; font-size: 0.82rem;">
+                    <b>Citation:</b> {ZOZOTOWN_ALL_META.published_reference}
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("#### 📊 Empirical Estimator Comparison (ZOZOTOWN Published Benchmark)")
+    st.caption("Evaluates target Bernoulli Thompson Sampling (BTS) policy using only logged interactions from the Random policy.")
+
+    benchmark_df = get_reference_zozotown_benchmark()
+    st.dataframe(benchmark_df, use_container_width=True, hide_index=True)
+
+    st.markdown(
+        """
+        <div class="insight-box" style="margin-top: 16px;">
+            <b>💡 Benchmark Finding:</b> On real ZOZOTOWN production traffic, <b>Doubly Robust</b> (0.0053 CTR) 
+            most accurately predicts the live on-policy ground truth (0.0054 CTR), achieving +51.4% predicted lift 
+            over the random baseline (actual live lift: +54.3%). Naive observational comparison severely overestimates 
+            performance (+77.1% lift) due to platform selection dynamics.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def render_footer() -> None:

@@ -17,6 +17,7 @@ import plotly.graph_objects as go
 
 from ope.analysis import DecisionMapResult, SweepResult
 from ope.bootstrap import BootstrapSummary
+from ope.sensitivity import SensitivityResult
 from ope.simulator import TRUE_INTERVENTIONAL_VALUE
 
 # Semantic color definitions
@@ -683,6 +684,129 @@ def create_decision_map_grid_chart(
             "tickfont": {"color": text_color, "size": 12, "family": "DM Sans"},
         },
         margin={"l": 60, "r": 40, "t": 75, "b": 50},
+        height=450,
+    )
+
+    return fig
+
+
+def create_sensitivity_bounds_chart(
+    sens_res: SensitivityResult,
+    is_dark: bool = True,
+) -> go.Figure:
+    """Builds Marginal Sensitivity Model bounds chart across odds ratios Lambda.
+
+    Args:
+        sens_res: SensitivityResult containing lambdas, lower_bounds, upper_bounds, point_estimate.
+        is_dark: Whether to render in dark or light theme.
+
+    Returns:
+        Plotly Figure showing policy value bounds, true target line, and lambda_star.
+    """
+    text_color = "#f8fafc" if is_dark else "#0f172a"
+    grid_color = "rgba(255, 255, 255, 0.08)" if is_dark else "rgba(0, 0, 0, 0.08)"
+    transparent_bg = "rgba(0, 0, 0, 0)"
+
+    fig = go.Figure()
+
+    # 1. Upper bound trace
+    fig.add_trace(
+        go.Scatter(
+            x=sens_res.lambdas,
+            y=sens_res.upper_bounds,
+            mode="lines",
+            line={"color": "#38bdf8", "width": 2},
+            name="Upper Bound (Worst-Case High)",
+            hovertemplate="Λ: %{x:.2f}<br>Upper Bound: %{y:.4f}<extra></extra>",
+        )
+    )
+
+    # 2. Lower bound trace with shaded fill to upper bound
+    fig.add_trace(
+        go.Scatter(
+            x=sens_res.lambdas,
+            y=sens_res.lower_bounds,
+            mode="lines",
+            fill="tonexty",
+            fillcolor="rgba(56, 189, 248, 0.16)",
+            line={"color": "#38bdf8", "width": 2},
+            name="Lower Bound (Worst-Case Low)",
+            hovertemplate="Λ: %{x:.2f}<br>Lower Bound: %{y:.4f}<extra></extra>",
+        )
+    )
+
+    # 3. Ground Truth interventional target V*
+    fig.add_hline(
+        y=TRUE_INTERVENTIONAL_VALUE,
+        line_dash="dash",
+        line_color="#22d3ee",
+        line_width=2,
+        annotation_text=f"Target V* = {TRUE_INTERVENTIONAL_VALUE:.4f}",
+        annotation_position="bottom right",
+        annotation_font={"color": "#22d3ee", "size": 11, "family": "DM Sans"},
+    )
+
+    # 4. SNIPW Point Estimate at Lambda = 1.0
+    fig.add_hline(
+        y=sens_res.point_estimate,
+        line_dash="dot",
+        line_color="#f59e0b",
+        line_width=1.5,
+        annotation_text=f"SNIPW Point Estimate: {sens_res.point_estimate:.4f}",
+        annotation_position="top left",
+        annotation_font={"color": "#f59e0b", "size": 11, "family": "DM Sans"},
+    )
+
+    # 5. Lambda* cutoff (smallest Lambda where bounds cover V*)
+    if sens_res.lambda_star is not None:
+        fig.add_vline(
+            x=sens_res.lambda_star,
+            line_dash="dashdot",
+            line_color="#f97316",
+            line_width=2,
+            annotation_text=f"Λ* = {sens_res.lambda_star:.2f} (Bounds Cover V*)",
+            annotation_position="top right",
+            annotation_font={"color": "#f97316", "size": 11, "family": "DM Sans"},
+        )
+
+    chart_title = (
+        "<b>Marginal Sensitivity Model: Policy Value Bounds vs. Confounding Odds Ratio (Λ)</b><br>"
+        f"<span style='font-size:12px; font-weight:400; color:{'#94a3b8' if is_dark else '#64748b'};'>"
+        f"{sens_res.method_label}. Shaded region spans worst-case policy values as hidden confounding odds ratio Λ increases."
+        "</span>"
+    )
+
+    fig.update_layout(
+        title={
+            "text": chart_title,
+            "font": {"color": text_color, "size": 14},
+            "x": 0.01,
+            "y": 0.96,
+        },
+        paper_bgcolor=transparent_bg,
+        plot_bgcolor=transparent_bg,
+        font={"color": text_color, "family": "Inter, sans-serif"},
+        xaxis={
+            "title": "<b>Confounding Odds Ratio Bound (Λ)</b> [1.0 = Unconfounded, 3.0 = Severe]",
+            "gridcolor": grid_color,
+            "zeroline": False,
+            "tickfont": {"color": text_color, "size": 11},
+        },
+        yaxis={
+            "title": "<b>Estimated Policy Value V̂(π<sub>e</sub>)</b>",
+            "gridcolor": grid_color,
+            "zeroline": False,
+            "tickfont": {"color": text_color, "size": 11},
+        },
+        legend={
+            "orientation": "h",
+            "yanchor": "bottom",
+            "y": 1.02,
+            "xanchor": "right",
+            "x": 1.0,
+            "font": {"color": text_color, "size": 11},
+        },
+        margin={"l": 55, "r": 35, "t": 80, "b": 50},
         height=450,
     )
 
