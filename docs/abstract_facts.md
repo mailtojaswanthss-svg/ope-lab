@@ -2,7 +2,7 @@
 
 > **Notice**: All numbers in this document are generated directly from execution of
 > `scripts/make_abstract_facts.py` using fixed random seeds. No values are hand-written.
-> **Generated at**: `2026-10-19 17:10:36`
+> **Generated at**: `2026-10-19 19:38:11`
 > **Ground Truth Interventional Target**: `V*(π_e) = 0.679788`
 
 ---
@@ -39,12 +39,12 @@
 
 | Setting | Estimator | Empirical 95% Coverage | Mean Interval Width | Std Width | Runtime |
 | :--- | :--- | :---: | :---: | :---: | :---: |
-| **Ideal RCT (c=0)** | IPW | **95.0%** | 0.0587 | 0.0055 | 16.3s |
-| **Ideal RCT (c=0)** | SNIPW | **94.0%** | 0.0558 | 0.0050 | 16.3s |
-| **Ideal RCT (c=0)** | Doubly Robust | **93.0%** | 0.0559 | 0.0053 | 16.3s |
-| **Confounder Trap (c=0.8)** | IPW | **0.0%** | 0.0584 | 0.0054 | 17.4s |
-| **Confounder Trap (c=0.8)** | SNIPW | **0.0%** | 0.0547 | 0.0053 | 17.4s |
-| **Confounder Trap (c=0.8)** | Doubly Robust | **0.0%** | 0.0546 | 0.0053 | 17.4s |
+| **Ideal RCT (c=0)** | IPW | **95.0%** | 0.0587 | 0.0055 | 17.6s |
+| **Ideal RCT (c=0)** | SNIPW | **94.0%** | 0.0558 | 0.0050 | 17.6s |
+| **Ideal RCT (c=0)** | Doubly Robust | **93.0%** | 0.0559 | 0.0053 | 17.6s |
+| **Confounder Trap (c=0.8)** | IPW | **0.0%** | 0.0584 | 0.0054 | 17.5s |
+| **Confounder Trap (c=0.8)** | SNIPW | **0.0%** | 0.0547 | 0.0053 | 17.5s |
+| **Confounder Trap (c=0.8)** | Doubly Robust | **0.0%** | 0.0546 | 0.0053 | 17.5s |
 
 > **Key Insight**: In the unconfounded regime, 95% bootstrap intervals achieve close to nominal
 > coverage (93.0% for Doubly Robust). Under unobserved confounding,
@@ -110,4 +110,4 @@ Minimum confounding strength $c$ where each estimator's absolute bias first exce
 - **Random Seed Protocol**: Base seeds = 42, 1000, 4242, 5000, 7000, 9000, 12000
 - **Sample Size**: $n = 5,000$ per simulation replication
 - **Target Policy Ground Truth**: $V^*(\pi_e) = 0.679788$
-- **Executed by**: `scripts/make_abstract_facts.py` on 2026-10-19 17:10:36
+- **Executed by**: `scripts/make_abstract_facts.py` on 2026-10-19 19:38:11

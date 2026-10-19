@@ -20,9 +20,10 @@ from pathlib import Path
 
 import numpy as np
 
-# Ensure repository root is on sys.path
-REPO_ROOT = Path(__file__).parent.parent
-sys.path.insert(0, str(REPO_ROOT))
+# Ensure backend and repository root are on sys.path
+BACKEND_DIR = Path(__file__).resolve().parent.parent
+REPO_ROOT = BACKEND_DIR.parent if (BACKEND_DIR.parent / "backend").exists() else BACKEND_DIR
+sys.path.insert(0, str(BACKEND_DIR))
 
 from ope.analysis import (
     compute_confounding_sweep,

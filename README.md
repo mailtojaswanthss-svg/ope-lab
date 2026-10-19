@@ -1,5 +1,13 @@
 # ⚖️ OPE Lab (Off-Policy Evaluation Laboratory)
 
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![React 19](https://img.shields.io/badge/react-19-61dafb.svg)](https://react.dev/)
+[![Vite 8](https://img.shields.io/badge/vite-8-646cff.svg)](https://vitejs.dev/)
+[![Tailwind CSS v4](https://img.shields.io/badge/tailwindcss-v4-38bdf8.svg)](https://tailwindcss.com/)
+[![Tests](https://img.shields.io/badge/tests-36%20passed%20(100%25)-success.svg)](backend/tests/)
+[![Code Style: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 > **Perceptron Hackathon 2026 — Problem 3:** *"Did the Policy Actually Work, or Did It Just Look Like It Did?"*
 
 **OPE Lab** is a futuristic, user-friendly, and mathematically grounded web application designed to evaluate new decision policies using only logged historical data from an old policy. It reveals when observational metrics fail due to selection bias, proves which off-policy estimators to trust across different data environments, and calculates exact sensitivity bounds for safe policy deployment.
@@ -13,6 +21,7 @@
 - [The 6 Estimators & Diagnostics](#-the-6-estimators--diagnostics)
 - [Futuristic Features & User Experience](#-futuristic-features--user-experience)
 - [Architecture & Tech Stack](#-architecture--tech-stack)
+- [Repository Monorepo Structure](#-repository-monorepo-structure)
 - [Quickstart & Installation](#-quickstart--installation)
 - [Running Tests & Linting](#-running-tests--linting)
 - [Verification Screenshots Gallery](#-verification-screenshots-gallery)
@@ -148,6 +157,48 @@ Estimators **never observe $U$**, reflecting the real-world challenge where unme
 
 ---
 
+## 📂 Repository Monorepo Structure
+
+The codebase is organized into two primary workspaces—**`backend/`** (Python computational engine & Streamlit app) and **`frontend/`** (React 19 + Vite 8 client application):
+
+```
+ope-lab/
+├── backend/                # 🐍 Python OPE Engine, Streamlit UI, tests & research scripts
+│   ├── .streamlit/         # Streamlit styling & configuration
+│   ├── ope/                # Statistical simulator, estimators, diagnostics, sensitivity, realdata
+│   ├── ui/                 # Mission-control UI components, theme, and colorblind-safe Plotly charts
+│   ├── tests/              # 36 unit and smoke tests (100% pass rate)
+│   ├── scripts/            # make_abstract_facts.py & compute_step2_benchmark.py
+│   ├── app.py              # Main Streamlit web application
+│   ├── requirements.txt    # Frozen Python dependencies
+│   └── README.md           # Backend-specific architecture guide
+├── frontend/               # ⚛️ React 19 + Vite 8 + Tailwind CSS v4 modern client
+│   ├── src/
+│   │   ├── app/            # Shell, layout, navigation & top bar
+│   │   ├── ope/            # TypeScript causal simulator & estimators
+│   │   ├── pages/          # Home, Story, Estimators, Studies, RealData, Team
+│   │   └── ui/             # FlutedGlass spectral banner, buttons, cards, sliders
+│   ├── package.json        # Node dependencies & npm scripts
+│   ├── vite.config.ts      # Vite 8 bundling & dev server config
+│   └── README.md           # Frontend-specific architecture guide
+├── docs/                   # 📄 Research documentation & benchmark facts
+│   └── abstract_facts.md   # Empirically verified numbers for research abstract
+├── screenshots/            # 📸 Verification proof images of all pages
+│   ├── frontend_home.png
+│   ├── frontend_story.png
+│   ├── frontend_estimators.png
+│   ├── frontend_lab.png
+│   ├── frontend_studies.png
+│   └── frontend_real_data.png
+├── scripts/                # 🤖 Root automated testing & screenshot utilities
+│   ├── take_frontend_screenshots.py
+│   └── take_screenshots.py
+├── .gitignore              # Multi-tier ignore rules (Python venv, caches, Node modules, dist)
+└── README.md               # Master repository documentation
+```
+
+---
+
 ## ⚡ Quickstart & Installation
 
 ### Option 1: Streamlit Backend App
@@ -165,7 +216,8 @@ py -3.11 -m venv .venv
 # Linux / macOS:
 source .venv/bin/activate
 
-# Install dependencies
+# Install backend dependencies
+cd backend
 pip install -r requirements.txt
 
 # Launch OPE Lab (Streamlit App)
@@ -219,8 +271,11 @@ Open your browser at `http://localhost:5173` (or `http://localhost:4173`).
 ## 🧪 Running Tests, Linting & Fact Generation
 
 ```bash
-# Run unit and smoke tests
-python -m pytest -q
+# Navigate to backend directory
+cd backend
+
+# Run unit and smoke tests (36 tests, 100% pass rate)
+pytest -q
 
 # Run linter
 ruff check .
